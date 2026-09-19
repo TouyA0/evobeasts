@@ -26,6 +26,33 @@ var spectreStage2Colors = [][3]int{
 	{75, 140, 85},
 }
 
+const spectreStage3Art = `        _.--^--._
+      ,'         ` + "`" + `.
+     ( (o)         )=====o
+      ` + "`" + `.           ,-'
+        ` + "`" + `--.____,-'   ` + "`" + `--.__
+       ,-'                 ` + "`" + `--.
+      (                        \
+       ` + "`" + `-.                  ,-. \
+          ` + "`" + `-.__            (   ) )
+     (____)     ` + "`" + `--......-'  ` + "`" + `-','
+      '  '`
+ 
+var spectreStage3Colors = [][3]int{
+	{70, 150, 85},
+	{80, 160, 90},
+	{95, 175, 95},
+	{90, 170, 95},
+	{85, 165, 95},
+	{80, 158, 92},
+	{75, 150, 90},
+	{70, 145, 88},
+	{65, 138, 85},
+	{55, 120, 78},
+	{48, 105, 70},
+}
+
 func init() {
 	speciesArts[EspeceSpectre+"-2"] = CreatureArt{Art: spectreStage2Art, Colors: spectreStage2Colors}
+	speciesArts[EspeceSpectre+"-3"] = CreatureArt{Art: spectreStage3Art, Colors: spectreStage3Colors}
 }
