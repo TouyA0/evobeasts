@@ -76,7 +76,7 @@ var phenixStage4Colors = [][3]int{
 }
 
 func init() {
-	speciesArts["Phénix-2"] = CreatureArt{Art: phenixStage2Art, Colors: phenixStage2Colors}
-	speciesArts["Phénix-3"] = CreatureArt{Art: phenixStage3Art, Colors: phenixStage3Colors}
-	speciesArts["Phénix-4"] = CreatureArt{Art: phenixStage4Art, Colors: phenixStage4Colors}
+	speciesArts[EspecePhenix+"-2"] = CreatureArt{Art: phenixStage2Art, Colors: phenixStage2Colors}
+	speciesArts[EspecePhenix+"-3"] = CreatureArt{Art: phenixStage3Art, Colors: phenixStage3Colors}
+	speciesArts[EspecePhenix+"-4"] = CreatureArt{Art: phenixStage4Art, Colors: phenixStage4Colors}
 }
