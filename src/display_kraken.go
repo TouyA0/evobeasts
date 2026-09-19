@@ -48,7 +48,34 @@ var krakenStage3Colors = [][3]int{
 	{80, 140, 155},
 }
 
+const krakenStage4Art = `          ,--^--. ,--^--,
+         ((  @@  ))
+    __,-'` + "`" + `==vv==` + "`" + `'-,__
+  ,'   \\    ||    //   ` + "`" + `,
+ /    __\\   ||   //__    \
+|   ,'   ` + "`" + `. _||_ .'   ` + "`" + `.   |
+ \ /       \/  \/       \ /
+  X        /  \        X
+ / \      (    )      / \
+(   )      ` + "`" + `--'      (   )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+ 
+var krakenStage4Colors = [][3]int{
+	{60, 130, 120},
+	{130, 240, 210},
+	{50, 110, 100},
+	{45, 100, 90},
+	{40, 90, 82},
+	{38, 85, 78},
+	{35, 78, 72},
+	{32, 72, 68},
+	{28, 65, 62},
+	{25, 58, 56},
+	{225, 235, 235},
+}
+
 func init() {
 	speciesArts[EspeceKraken+"-2"] = CreatureArt{Art: krakenStage2Art, Colors: krakenStage2Colors}
 	speciesArts[EspeceKraken+"-3"] = CreatureArt{Art: krakenStage3Art, Colors: krakenStage3Colors}
+	speciesArts[EspeceKraken+"-4"] = CreatureArt{Art: krakenStage4Art, Colors: krakenStage4Colors}
 }
