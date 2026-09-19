@@ -32,6 +32,13 @@ const (
 	EspeceKraken  = "Kraken"
 	EspeceSpectre = "Caméléon Spectral"
 )
+
+// Noms de sorts
+const (
+	SortSoufflePrimordial   = "Souffle primordial"
+	SortRenaissance         = "Renaissance"
+	SortExecutionSpectrale  = "Exécution spectrale"
+)
  
 // Constantes de règles
 const (
