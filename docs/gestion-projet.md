@@ -91,23 +91,29 @@ git checkout feature/mon-module
 ```
 src/
 ├── go.mod
-├── main.go          COMMUN  → menu principal uniquement
-├── types.go         COMMUN  → toutes les structs et constantes
+├── main.go              COMMUN  → menu principal uniquement
+├── types.go             COMMUN  → toutes les structs et constantes
 │
-├── character.go     Membre 2 → création, affichage, stats
-├── inventory.go     Membre 2 → inventaire + fonctions partagées
+├── character.go         Membre 2 → création, affichage, stats
+├── inventory.go         Membre 2 → inventaire + fonctions partagées
 │
-├── merchant.go      Membre 3 → boutique
-├── economy.go       Membre 3 → or, XP, niveaux
+├── merchant.go          Membre 3 → boutique
+├── economy.go           Membre 3 → or, XP, niveaux
 │
-├── craft.go         Membre 4 → forgeron
-├── equipment.go     Membre 4 → artefacts équipés
+├── craft.go             Membre 4 → forgeron
+├── equipment.go         Membre 4 → artefacts équipés
 │
-├── combat.go        Quentin → boucle de combat, tours
-├── monsters.go      Quentin → les 4 ennemis + phases du boss
-├── spells.go        Quentin → sorts et effets
-├── evolution.go     Quentin → espèces, paliers, évolutions
-└── display.go       Quentin → ASCII art des créatures
+├── combat.go            Quentin → boucle de combat, dégâts, patterns d'ennemis
+├── monsters.go          Quentin → les 4 ennemis + phases du boss
+├── spells.go            Quentin → catalogue de sorts, apprentissage, lancement
+├── evolution.go         Quentin → espèces, paliers, évolutions
+├── layout.go            Quentin → mise en page de l'écran de combat
+├── display.go           Quentin → moteur d'affichage ASCII (générique)
+├── display_egg.go       Quentin → dessin de l'œuf (partagé par les 3 espèces)
+├── display_phoenix.go   Quentin → dessins du Phénix (paliers 2 à 4)
+├── display_kraken.go    Quentin → dessins du Kraken (paliers 2 à 4)
+├── display_spectre.go   Quentin → dessins du Caméléon Spectral (paliers 2 à 4)
+└── display_monsters.go  Quentin → dessins des 4 ennemis (PAS ENCORE FAIT)
 ```
 
 Un fichier par domaine, comme ça chacun bosse dans les siens et on évite
@@ -180,6 +186,12 @@ Tous les noms sont définis en haut de `types.go` (`ResEcaille`,
 écrite en dur** : une apostrophe typographique au lieu d'une droite et le
 craft échoue sans message d'erreur. Pour renommer un objet, on modifie la
 constante, pas les usages.
+
+Depuis l'écriture de `spells.go` et `monsters.go`, ça vaut aussi pour les
+**noms de sorts** (`SortSoufflePrimordial`, `SortRenaissance`,
+`SortExecutionSpectrale`) et les **noms d'ennemis**
+(`MonstreVer`, `MonstreSanglier`, `MonstreLoupGarou`,
+`MonstreDragonAncien`) — toutes définies dans `types.go`.
 
 ---
 
@@ -273,6 +285,10 @@ Au démarrage : PV à 50 % du max (imposé par le sujet, tâche 11), mana
 plein, 100 or, et deux Essences vitales dans le sac pour que le premier
 combat soit jouable.
 
+**Important pour membre 2 :** le palier 1 (l'œuf) est réellement jouable,
+ce n'est pas juste un moment narratif — le tout premier combat contre le
+Ver se joue avec l'œuf, à ses stats de base.
+
 ---
 
 ## 7. Les compétences
@@ -321,6 +337,11 @@ seulement à l'attaque de base.
 | Lame spectrale | 4 | 15 | 28 dégâts, ignore les résistances |
 | Dissolution | 4 | 12 | intangible 1 tour : on esquive tout mais on ne peut pas agir |
 | Exécution spectrale (ultime) | 4 | 30 | 60 dégâts depuis l'invisibilité, 25 sinon |
+
+L'invisibilité (Camouflage, Voile chromatique) est un mécanisme
+générique dans le code : le prochain sort offensif lancé pendant qu'on
+est invisible reçoit le bonus stocké, ce qui explique le doublement de
+Morsure furtive sans code spécifique à ce sort.
 
 ### Le sort acheté
 
@@ -423,8 +444,10 @@ chaque tick (`time.Sleep`). On la rend utile en la faisant dépendre du
 contexte :
 
 - **En combat** : on la balance sur l'ennemi, 10 dégâts × 3 ticks
+  (déjà géré côté combat, dans `combatInventoryMenu`)
 - **Hors combat** : on se l'inflige à soi-même, avec un message
-  d'avertissement et une confirmation avant
+  d'avertissement et une confirmation avant (à faire par membre 2,
+  dans `inventory.go`)
 
 Comme ça on respecte la consigne à la lettre tout en ayant un objet qui
 sert vraiment.
@@ -453,7 +476,8 @@ modifiant les constantes dans `types.go`.
 
 ### Combat
 
-- Celui qui a la plus haute initiative commence le tour
+- Celui qui a la plus haute initiative commence le tour, malus
+  d'initiative actifs compris (fonction `effectiveInitiative`)
 - Dégâts = (base + buffs − malus) × résistance de la cible à l'élément
 - L'esquive se teste avant chaque attaque reçue
 - Le bouclier absorbe avant les PV
@@ -464,8 +488,12 @@ modifiant les constantes dans `types.go`.
   pour rien
 - Le mana ne remonte pas pendant un combat, seulement avec les Essences
   de mana
-- À 0 PV : le monstre meurt, ou nous on meurt (tâche 8 : on revient à
-  50 % des PV max, hors combat)
+- **À 0 PV en combat, le combat s'arrête immédiatement et renvoie au
+  menu** (tâche 22.2) — sauf le Phénix qui, avec Renaissance non encore
+  utilisée, revient à 50 % PV et continue le même combat. Dans tous les
+  autres cas de défaite, `isDead` (tâche 8, membre 2) sert de filet de
+  sécurité pour ramener le joueur à 50 % de ses PV max avant de le
+  renvoyer au menu, plutôt que de le laisser bloqué à 0 PV
 
 ### Inventaire
 
@@ -508,7 +536,7 @@ changent pas sans prévenir tout le monde.
 
 Aucune fonction, uniquement les structs (`Character`, `Monster`, `Item`,
 `Spell`, `Species`, `Equipment`, `Recipe`, `StatusEffect`, `Phase`,
-`LootEntry`) et les constantes de noms et de règles.
+`LootEntry`, `CreatureArt`) et les constantes de noms et de règles.
 
 ### character.go — Membre 2
 
@@ -517,10 +545,13 @@ Aucune fonction, uniquement les structs (`Character`, `Monster`, `Item`,
 | `characterCreation() *Character` | demande le nom et l'espèce, renvoie le perso prêt |
 | `initCharacter(...) *Character` | construit un Character à partir des valeurs de base |
 | `formatName(s string) string` | majuscule au début, reste en minuscules |
-| `displayInfo(p *Character)` | fiche du perso, appelle `displayCreature` pour l'ASCII |
+| `displayInfo(p *Character)` | fiche du perso, appelle `displayCreature(p.Species.Name, p.Stage)` |
 | `recalculateStats(p *Character)` | **partagée** — recalcule MaxHP, MaxMana, Attack depuis zéro |
 | `isDead(p *Character) bool` | **partagée** — vérifie 0 PV, ressuscite à 50 % |
 | `readInput() string` | **partagée** — lecture clavier nettoyée |
+
+⚠️ `displayCreature` attend le **nom** de l'espèce (`p.Species.Name`,
+une string), pas la struct `Species` entière.
 
 ### inventory.go — Membre 2
 
@@ -543,6 +574,9 @@ Aucune fonction, uniquement les structs (`Character`, `Monster`, `Item`,
 | `buyItem(p *Character, item Item)` | vérifie l'or et la place, débite, ajoute |
 | `upgradeInventorySlot(p *Character)` | +10 places, 3 fois maximum |
 | `merchantDisplay(items []Item)` | affiche le catalogue avec les prix |
+
+Pour le grimoire, utiliser `learnSpell(p, SortSoufflePrimordial)`
+(fonction de `spells.go`, voir plus bas) — jamais la chaîne écrite en dur.
 
 ### economy.go — Membre 3
 
@@ -573,50 +607,98 @@ Aucune fonction, uniquement les structs (`Character`, `Monster`, `Item`,
 | `equipmentBonus(e Equipment) (hp int, mana int)` | somme des bonus, utilisée par `recalculateStats` |
 | `equipmentDisplay(e Equipment)` | affiche les trois emplacements |
 
+---
+
 ### combat.go — Quentin
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `combatMenu(p *Character)` | liste les ennemis débloqués, lance le combat choisi |
-| `trainingFight(p *Character, m *Monster)` | boucle du combat, alterne les tours |
-| `characterTurn(p *Character, m *Monster)` | menu du joueur : attaquer, sort, inventaire |
-| `monsterTurn(p *Character, m *Monster)` | applique le pattern de l'ennemi |
-| `dealDamage(base int, element Element, target ...)` | calcule les dégâts avec résistances et bouclier |
-| `resolveEffects(...)` | applique les DoT, régén, buffs en fin de tour |
-| `endFight(p *Character, m *Monster, won bool)` | XP, or, loot, évolution, restaure PV et mana |
+| `combatMenu(p *Character)` | menu qui liste les ennemis débloqués, lance `trainingFight` |
+| `trainingFight(p *Character, m *Monster)` | boucle principale : ordre de jeu via initiative, appelle les tours, `resolveEffects`, gère fin de combat |
+| `checkPlayerDefeat(p *Character) bool` | gère la mort du joueur : déclenche Renaissance si dispo, sinon fin de combat + `isDead` |
+| `runCharacterTurn(p *Character, m *Monster)` | menu du joueur : Attaquer / Sorts / Inventaire |
+| `basicAttack(p *Character, m *Monster)` | attaque de base, élément = celui de l'espèce du joueur |
+| `spellMenu(p *Character, m *Monster)` | liste les sorts connus, lance celui choisi via `castSpell` |
+| `combatInventoryMenu(p *Character, m *Monster)` | inventaire en combat ; potion de poison jetée sur l'ennemi ici |
+| `announcePhaseChange(m *Monster)` | affiche le message si `updatePhase` signale un changement |
+| `runMonsterTurn(p *Character, m *Monster, turn int)` | aiguille vers le pattern du bon ennemi |
+| `monsterBasicAttack(p *Character, m *Monster, percent int)` | attaque à X % de l'attaque du monstre, affiche le format imposé (tâche 20) |
+| `verPattern`, `sanglierPattern`, `loupGarouPattern`, `dragonPattern` | le comportement propre à chaque ennemi, tour par tour |
+| `monsterResistance(m *Monster, e Element) float64` | résistance d'un monstre à un élément, 1.0 par défaut |
+| `dealDamage(base int, element Element, target *Monster, ignoreResist bool) int` | dégâts joueur → monstre, renvoie le montant réel après résistance/bouclier |
+| `dealDamageToPlayer(base int, element Element, p *Character) (int, bool)` | raccourci de `dealDamageToPlayerElement` |
+| `dealDamageToPlayerElement(base int, element Element, p *Character) (int, bool)` | dégâts monstre → joueur : esquive, résistance, réduction, bouclier |
+| `effectiveInitiative(base int, effects []StatusEffect) int` | initiative après malus actifs |
+| `resolveEffects(p *Character, m *Monster)` | applique DoT/régén sur les deux, décrémente les durées |
+| `tickEffects(...)` | fonction générique utilisée par `resolveEffects` |
+| `endFight(p *Character, m *Monster, won bool)` | or, XP, loot, évolution, restaure PV/mana |
 
 ### monsters.go — Quentin
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `initVer() *Monster` | et les trois autres `initXxx` |
-| `monsterByTier(tier int) *Monster` | renvoie l'ennemi correspondant au palier |
-| `updatePhase(m *Monster)` | fait basculer le Dragon de phase selon ses PV |
-| `rollLoot(m *Monster) []Item` | tire les ressources droppées |
+| `initVer() *Monster` | 20 PV, attaque 3, drop Plume calcinée à 60 % |
+| `initSanglier() *Monster` | 45 PV, attaque 7, drop Fragment d'écaille à 60 % |
+| `initLoupGarou() *Monster` | 80 PV, attaque 12, drop Poussière spectrale (50 %) et Fragment d'écaille (40 %) |
+| `initDragonAncien() *Monster` | 150 PV, ses 4 phases avec seuils et résistances |
+| `monsterByTier(tier int) *Monster` | renvoie un ennemi neuf correspondant au palier |
+| `updatePhase(m *Monster) string` | fait progresser le Dragon vers sa phase suivante selon ses PV restants, renvoie un message si ça change de phase |
+| `rollLoot(m *Monster) []Item` | tire chaque ressource de la table de loot indépendamment |
 
 ### spells.go — Quentin
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `allSpells() []Spell` | catalogue de tous les sorts du jeu |
-| `spellsForStage(s Species, stage int) []Spell` | les sorts débloqués à ce palier |
-| `learnSpell(p *Character, name string) bool` | **partagée** — ajoute un sort, `false` si déjà connu |
-| `castSpell(p *Character, m *Monster, spell Spell)` | applique le sort, débite le mana |
+| `allSpells() []Spell` | catalogue complet, tous sorts + le grimoire |
+| `spellsForStage(s Species, stage int) []Spell` | sorts débloqués À CE PALIER EXACTEMENT (pas les précédents) |
+| `spellByName(name string) (Spell, bool)` | cherche un sort par son nom dans le catalogue |
+| `hasSpell(p *Character, name string) bool` | le personnage connaît-il déjà ce sort ? |
+| `learnSpell(p *Character, name string) bool` | **partagée** — ajoute un sort, `false` si déjà connu ou inconnu du catalogue |
+| `canCastSpell(p *Character, spell Spell) (bool, string)` | vérifie mana et ultime déjà utilisé, renvoie un message d'erreur explicite |
+| `castSpell(p *Character, m *Monster, spell Spell) (string, bool)` | applique tous les effets du sort, gère l'invisibilité générique et le cas spécial d'Exécution spectrale |
 
 ### evolution.go — Quentin
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `allSpecies() []Species` | définition des trois espèces avec leurs stats |
+| `allSpecies() []Species` | les 3 espèces avec toutes leurs stats de base et leur progression |
 | `speciesByName(name string) Species` | récupère une espèce par son nom |
-| `evolve(p *Character)` | monte le palier, débloque les sorts, restaure PV et mana |
-| `canEvolve(p *Character, defeatedTier int) bool` | première victoire contre cet ennemi ? |
+| `canEvolve(p *Character, defeatedTier int) bool` | première victoire contre ce palier ET pas déjà au palier 4 |
+| `evolve(p *Character)` | incrémente le palier, recalcule les stats, restaure PV/mana, apprend les nouveaux sorts |
+| `currentStageName(p *Character) string` | raccourci sûr pour le nom du palier actuel |
+| `getResistance(s Species, e Element) float64` | résistance d'une espèce à un élément, 1.0 par défaut |
+| `isGameComplete(p *Character) bool` | le Dragon Ancien a-t-il été vaincu ? |
+| `onEvolve(p *Character, previousStageName string) string` | message "X devient Y !" — voir note ci-dessous |
 
-### display.go — Quentin
+### layout.go — Quentin
+
+Composition de l'écran de combat : ennemi centré en haut avec sa barre
+de vie, séparateur, joueur à gauche avec ses stats à droite.
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `displayCreature(s Species, stage int)` | **partagée** — ASCII art coloré de la créature |
-| `displayMonster(m *Monster)` | ASCII art de l'ennemi |
-| `healthBar(current, max int) string` | barre de vie visuelle |
-| `combatDisplay(p *Character, m *Monster)` | écran de combat complet |
+| `clearScreen()` | efface le terminal avant de redessiner |
+| `visibleWidth(s string) int` | compte les caractères affichés (pas les octets — important à cause des accents) |
+| `padRight(s string, width int) string` | complète une ligne avec des espaces |
+| `center(s string, width int) string` | centre une ligne |
+| `sideBySide(left, right string, leftWidth, gap int) string` | colle deux blocs de texte côte à côte |
+| `healthBar(current, max, width int) string` | barre `[████░░░░] 52/80` |
+| `separator() string` | ligne `───` |
+| `fitArt(art string, maxWidth, maxHeight int) string` | tronque un dessin trop grand pour le cadre de combat |
+| `artToString(art string, colors [][3]int, width int) string` | rend un art coloré en string (pour le combiner avant affichage) |
+| `combatScreen(p *Character, m *Monster, turn int)` | assemble et affiche l'écran de combat complet |
+| `slotName(item *Item) string` | nom d'un artefact équipé, ou `—` si vide |
+
+### display.go — Quentin
+
+| Élément | Ce que c'est |
+|---|---|
+| `CreatureArt` (struct) | associe un dessin à son dégradé de couleurs (une couleur par ligne) |
+| `speciesArts`, `monsterArts` (maps) | remplies par les fichiers `display_*.go` via leurs `init()` |
+| `printArt(art string, colors [][3]int)` | affiche un dessin coloré, pleine taille (utilisé pour la fiche perso) |
+| `displayCreature(speciesName string, stage int)` | **partagée** — affiche le dessin d'une espèce à un palier donné |
+| `displayMonster(name string)` | affiche le dessin d'un ennemi |
+
+### display_egg.go, display_phoenix.go, display_kraken.go, display_spectre.go — Quentin
+
+### display_monsters.go — Quentin
