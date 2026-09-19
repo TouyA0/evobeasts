@@ -1,5 +1,33 @@
 package main
 
+const phenixStage2Art = `        ,~o
+       (  o )>
+      (        )
+     (    __    )
+     (   (  )    )
+      (   --    )
+       (        )
+        (      )
+         ` + "`" + `.__,'
+          |  |
+         (____)
+          '  '`
+
+var phenixStage2Colors = [][3]int{
+	{240, 200, 60},
+	{240, 210, 70},
+	{250, 220, 90},
+	{250, 220, 90},
+	{250, 225, 100},
+	{250, 225, 100},
+	{245, 215, 90},
+	{245, 215, 90},
+	{235, 195, 80},
+	{230, 160, 60},
+	{220, 145, 50},
+	{200, 130, 40},
+}
+
 const phenixStage3Art = `       _/\/\_
       (  o   )
      ,-'.___.` + "`" + `--<
@@ -48,6 +76,7 @@ var phenixStage4Colors = [][3]int{
 }
 
 func init() {
+	speciesArts["Phénix-2"] = CreatureArt{Art: phenixStage2Art, Colors: phenixStage2Colors}
 	speciesArts["Phénix-3"] = CreatureArt{Art: phenixStage3Art, Colors: phenixStage3Colors}
 	speciesArts["Phénix-4"] = CreatureArt{Art: phenixStage4Art, Colors: phenixStage4Colors}
 }
