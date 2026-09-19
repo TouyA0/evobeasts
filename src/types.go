@@ -39,6 +39,14 @@ const (
 	SortRenaissance         = "Renaissance"
 	SortExecutionSpectrale  = "Exécution spectrale"
 )
+
+// Noms des ennemis
+const (
+	MonstreVer          = "Ver"
+	MonstreSanglier     = "Sanglier"
+	MonstreLoupGarou    = "Loup-garou"
+	MonstreDragonAncien = "Dragon Ancien"
+)
  
 // Constantes de règles
 const (
