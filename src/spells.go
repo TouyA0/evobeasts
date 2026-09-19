@@ -210,8 +210,8 @@ func castSpell(p *Character, m *Monster, spell Spell) (string, bool) {
  
 	// Effets offensifs sur le monstre
 	if damage > 0 && m != nil {
-		dealDamage(damage, spell.Element, m, spell.IgnoreResist)
-		message += ": " + strconv.Itoa(damage) + " dégâts"
+		applied := dealDamage(damage, spell.Element, m, spell.IgnoreResist)
+		message += ": " + strconv.Itoa(applied) + " dégâts"
 	}
 	if spell.DotDamage > 0 && m != nil {
 		m.Effects = append(m.Effects, StatusEffect{
