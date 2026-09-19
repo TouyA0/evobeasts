@@ -1,4 +1,4 @@
-package evobeasts
+package main
 
 // IDENTIFIANTS PARTAGES
 
