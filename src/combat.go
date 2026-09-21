@@ -66,23 +66,32 @@ func trainingFight(p *Character, m *Monster) {
 			}
 			runMonsterTurn(p, m, turn)
 			if checkPlayerDefeat(p) {
+				pauseForInput()
 				return
 			}
 		} else {
 			runMonsterTurn(p, m, turn)
 			if checkPlayerDefeat(p) {
+				pauseForInput()
 				return
 			}
 			runCharacterTurn(p, m)
 			if m.CurrentHP <= 0 {
 				endFight(p, m, true)
+				pauseForInput()
 				return
 			}
 		}
  
 		resolveEffects(p, m)
+		pauseForInput()
 		turn++
 	}
+}
+
+func pauseForInput() {
+	fmt.Print("\n(Appuyez sur Entrée pour continuer...)")
+	readInput()
 }
 
 func checkPlayerDefeat(p *Character) bool {
@@ -136,36 +145,91 @@ func basicAttack(p *Character, m *Monster) {
 	announcePhaseChange(m)
 }
 
+func spellIcon(s Spell) string {
+	switch {
+	case s.IsUltimate:
+		return "💀"
+	case s.Heal > 0:
+		return "💚"
+	case s.ShieldValue > 0:
+		return "🛡️"
+	case s.Invisible:
+		return "👻"
+	case s.Intangible:
+		return "🌫️"
+	case s.DotDamage > 0:
+		return "🔥"
+	case s.AttackBuff > 0:
+		return "⚡"
+	case s.Damage > 0:
+		return "💥"
+	default:
+		return "✨"
+	}
+}
+
 func spellMenu(p *Character, m *Monster) {
-	if len(p.Spells) == 0 {
+	castable := make([]Spell, 0, len(p.Spells))
+	for _, s := range p.Spells {
+		if s.Name != SortRenaissance {
+			castable = append(castable, s)
+		}
+	}
+
+	if len(castable) == 0 {
 		fmt.Println("Aucun sort connu.")
 		return
 	}
-	for i, s := range p.Spells {
-		fmt.Printf("%d. %s (%d mana)\n", i+1, s.Name, s.ManaCost)
-	}
-	fmt.Println("0. Retour")
-	fmt.Print("Votre choix : ")
-	choice := readInput()
-	if choice == "0" {
+
+	for {
+		for i, s := range castable {
+			tag := ""
+			if s.Element != p.Species.Element {
+				tag += fmt.Sprintf(" [%s]", s.Element)
+			}
+			if s.IsUltimate {
+				tag += " (ULTIME)"
+			}
+
+			ok, reason := canCastSpell(p, s)
+			if ok {
+				fmt.Printf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost)
+			} else {
+				fmt.Printf("\x1b[38;2;220;70;70m%d. %s %s%s (%d mana) — %s\x1b[0m\n",
+					i+1, spellIcon(s), s.Name, tag, s.ManaCost, reason)
+			}
+			fmt.Printf("   %s\n", s.Description)
+		}
+		fmt.Println("0. Retour")
+		fmt.Print("Votre choix : ")
+
+		choice := readInput()
+		if choice == "0" {
+			return
+		}
+		idx, err := strconv.Atoi(choice)
+		if err != nil || idx < 1 || idx > len(castable) {
+			fmt.Println("Choix invalide, tour passé.")
+			return
+		}
+
+		spell := castable[idx-1]
+		if ok, reason := canCastSpell(p, spell); !ok {
+			fmt.Println("Sort inutilisable : " + reason)
+			continue
+		}
+
+		message, ok := castSpell(p, m, spell)
+		fmt.Println(message)
+		if !ok {
+			continue
+		}
+		if m != nil {
+			fmt.Printf("%s  PV : %d/%d\n", m.Name, m.CurrentHP, m.MaxHP)
+		}
+		announcePhaseChange(m)
 		return
 	}
-	idx, err := strconv.Atoi(choice)
-	if err != nil || idx < 1 || idx > len(p.Spells) {
-		fmt.Println("Choix invalide, tour passé.")
-		return
-	}
- 
-	spell := p.Spells[idx-1]
-	message, ok := castSpell(p, m, spell)
-	fmt.Println(message)
-	if !ok {
-		return
-	}
-	if m != nil {
-		fmt.Printf("%s  PV : %d/%d\n", m.Name, m.CurrentHP, m.MaxHP)
-	}
-	announcePhaseChange(m)
 }
 
 func combatInventoryMenu(p *Character, m *Monster) {
