@@ -11,6 +11,7 @@ func initVer() *Monster {
 		Attack:     3,
 		Initiative: 3,
 		Element:    ElementNeutre,
+		Skills:      []string{"Morsure"},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -31,6 +32,7 @@ func initSanglier() *Monster {
 		Attack:     7,
 		Initiative: 9,
 		Element:    ElementNeutre,
+		Skills:      []string{"Charge", "Enragé"},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -51,6 +53,7 @@ func initLoupGarou() *Monster {
 		Attack:     12,
 		Initiative: 13,
 		Element:    ElementNeutre,
+		Skills:      []string{"Griffure enragée", "Hurlement", "Régénération lunaire"},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -87,18 +90,21 @@ func initDragonAncien() *Monster {
 				Resistances: map[Element]float64{
 					ElementFeu: 0.5, ElementEau: 1.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
+				Attacks: []string{"Souffle ardent", "Griffe"},
 			},
 			{
 				Name: "Vague Ancestrale", HPThreshold: 0.75, Element: ElementEau,
 				Resistances: map[Element]float64{
 					ElementFeu: 1.5, ElementEau: 0.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
+				Attacks: []string{"Raz-de-marée", "Étreinte liquide"},
 			},
 			{
 				Name: "Voile Spectral", HPThreshold: 0.50, Element: ElementSpectre,
 				Resistances: map[Element]float64{
 					ElementFeu: 1.0, ElementEau: 1.5, ElementSpectre: 0.5, ElementNeutre: 1.0,
 				},
+				Attacks: []string{"Frappe hors du plan", "Dissolution"},
 			},
 			{
 				Name: "Convergence", HPThreshold: 0.25, Element: ElementNeutre,
@@ -106,6 +112,7 @@ func initDragonAncien() *Monster {
 					ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
 				DamageBonus: 50,
+				Attacks:     []string{"Souffle ardent", "Raz-de-marée", "Frappe hors du plan"},
 			},
 		},
 	}

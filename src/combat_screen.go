@@ -10,7 +10,6 @@ import (
 const (
 	creatureArtWidth  = 45
 	creatureArtHeight = 16
-	columnGap         = 4
 )
 
 func clearScreen() {
@@ -31,27 +30,47 @@ func padRight(s string, width int) string {
 	return s + strings.Repeat(" ", width-w)
 }
 
-func sideBySide(left, right string, leftWidth, gap int) string {
+func truncateVisible(s string, maxWidth int) string {
+	runes := []rune(s)
+	if len(runes) <= maxWidth {
+		return s
+	}
+	if maxWidth <= 1 {
+		return "…"
+	}
+	return string(runes[:maxWidth-1]) + "…"
+}
+
+func centerText(s string, width int) string {
+	w := visibleWidth(s)
+	if w >= width {
+		return s
+	}
+	left := (width - w) / 2
+	right := width - w - left
+	return strings.Repeat(" ", left) + s + strings.Repeat(" ", right)
+}
+
+func dividedColumns(left, right string, leftWidth int) string {
 	leftLines := strings.Split(left, "\n")
 	rightLines := strings.Split(right, "\n")
-
+ 
 	height := len(leftLines)
 	if len(rightLines) > height {
 		height = len(rightLines)
 	}
-
+ 
 	var out strings.Builder
 	for i := 0; i < height; i++ {
-		l := ""
+		l, r := "", ""
 		if i < len(leftLines) {
 			l = leftLines[i]
 		}
-		r := ""
 		if i < len(rightLines) {
 			r = rightLines[i]
 		}
 		out.WriteString(padRight(l, leftWidth))
-		out.WriteString(strings.Repeat(" ", gap))
+		out.WriteString(" │ ")
 		out.WriteString(r)
 		out.WriteString("\n")
 	}
@@ -167,12 +186,47 @@ func boxify(lines []string) string {
 	return b.String()
 }
 
+func vulnerabilityHint(res map[Element]float64) string {
+	var weak []string
+	for _, e := range []Element{ElementFeu, ElementEau, ElementSpectre} {
+		if v, ok := res[e]; ok && v > 1.0 {
+			weak = append(weak, string(e))
+		}
+	}
+	if len(weak) == 0 {
+		return ""
+	}
+	return "Vulnérable: " + strings.Join(weak, "/")
+}
+
+func enemySkills(m *Monster) []string {
+	if len(m.Phases) > 0 {
+		return m.Phases[m.CurrentPhase].Attacks
+	}
+	return m.Skills
+}
+
 func combatScreen(p *Character, m *Monster, turn int) {
 	clearScreen()
  
 	var lines []string
 	lines = append(lines, fmt.Sprintf(" Tour %d", turn), "")
+
+	enemyHeaderText := m.Name
+	if len(m.Phases) > 0 {
+		enemyHeaderText = fmt.Sprintf("%s (%s)", m.Name, m.Phases[m.CurrentPhase].Name)
+	}
+	if m.Element != ElementNeutre {
+		enemyHeaderText += " · " + string(m.Element)
+	}
+	enemyHeaderText = truncateVisible(enemyHeaderText, creatureArtWidth)
+	enemyHeader := "\x1b[38;2;220;80;80m" + centerText(enemyHeaderText, creatureArtWidth) + "\x1b[0m"
  
+	playerHeaderText := truncateVisible(
+		fmt.Sprintf("%s — %s (%s)", p.Name, p.Species.StageNames[p.Stage-1], p.Species.Element),
+		creatureArtWidth)
+	playerHeader := "\x1b[38;2;100;220;120m" + centerText(playerHeaderText, creatureArtWidth) + "\x1b[0m"
+
 	enemyArt := ""
 	if ca, ok := monsterArts[m.Name]; ok {
 		fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
@@ -186,27 +240,25 @@ func combatScreen(p *Character, m *Monster, turn int) {
 		playerArt = artToString(fitted, ca.Colors, creatureArtWidth)
 	}
  
-	artBlock := sideBySide(enemyArt, playerArt, creatureArtWidth, columnGap)
-	lines = append(lines, strings.Split(strings.TrimRight(artBlock, "\n"), "\n")...)
-	lines = append(lines, "")
- 
-	// --- Bloc d'infos ennemi (gauche) ---
-	monsterLabel := m.Name
-	if len(m.Phases) > 0 {
-		monsterLabel = fmt.Sprintf("%s (%s)", m.Name, m.Phases[m.CurrentPhase].Name)
-	}
+	// --- Bloc d'infos ennemi (gauche) : PV, vulnérabilité, compétences ---
 	enemyInfoLines := []string{
-		monsterLabel,
-		healthBar(m.CurrentHP, m.MaxHP, 20),
+		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
 	}
 	if status := statusLine(m.Shield, m.Effects, false, m.Intangible); status != "" {
 		enemyInfoLines = append(enemyInfoLines, status)
 	}
-	enemyInfo := strings.Join(enemyInfoLines, "\n")
+	if hint := vulnerabilityHint(m.Resistances); hint != "" {
+		enemyInfoLines = append(enemyInfoLines,
+			"\x1b[38;2;140;170;220m"+truncateVisible(hint, creatureArtWidth)+"\x1b[0m")
+	}
+	if skills := enemySkills(m); len(skills) > 0 {
+		skillLine := "Compétences: " + strings.Join(skills, ", ")
+		enemyInfoLines = append(enemyInfoLines,
+			"\x1b[38;2;150;150;170m"+truncateVisible(skillLine, creatureArtWidth)+"\x1b[0m")
+	}
  
 	// --- Bloc d'infos joueur (droite) ---
 	playerInfoLines := []string{
-		fmt.Sprintf("%s — %s (%s)", p.Name, p.Species.StageNames[p.Stage-1], p.Species.Element),
 		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
 		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
 	}
@@ -214,16 +266,21 @@ func combatScreen(p *Character, m *Monster, turn int) {
 		playerInfoLines = append(playerInfoLines, status)
 	}
 	playerInfoLines = append(playerInfoLines, "",
-		"Tête  : "+slotName(p.Equipment.Head),
-		"Torse : "+slotName(p.Equipment.Chest),
-		"Pieds : "+slotName(p.Equipment.Feet),
+		"Tête  : "+truncateVisible(slotName(p.Equipment.Head), creatureArtWidth-8),
+		"Torse : "+truncateVisible(slotName(p.Equipment.Chest), creatureArtWidth-8),
+		"Pieds : "+truncateVisible(slotName(p.Equipment.Feet), creatureArtWidth-8),
 	)
-	playerInfo := strings.Join(playerInfoLines, "\n")
  
-	infoBlock := sideBySide(enemyInfo, playerInfo, creatureArtWidth, columnGap)
-	lines = append(lines, strings.Split(strings.TrimRight(infoBlock, "\n"), "\n")...)
+	leftColumn := strings.Join(append([]string{enemyHeader, ""},
+		append(strings.Split(enemyArt, "\n"), append([]string{""}, enemyInfoLines...)...)...), "\n")
  
-	lines = append(lines, "", strings.Repeat("─", creatureArtWidth*2+columnGap))
+	rightColumn := strings.Join(append([]string{playerHeader, ""},
+		append(strings.Split(playerArt, "\n"), append([]string{""}, playerInfoLines...)...)...), "\n")
+ 
+	merged := dividedColumns(leftColumn, rightColumn, creatureArtWidth)
+	lines = append(lines, strings.Split(strings.TrimRight(merged, "\n"), "\n")...)
+ 
+	lines = append(lines, "", strings.Repeat("─", creatureArtWidth*2+3))
  
 	fmt.Print(boxify(lines))
 }

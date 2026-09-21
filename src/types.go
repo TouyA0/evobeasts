@@ -243,6 +243,7 @@ type Phase struct {
 	Element     Element
 	Resistances map[Element]float64 // multiplicateur de dégâts reçus
 	DamageBonus int                 // % de dégâts bonus (phase finale)
+	Attacks     []string
 }
 
 type Monster struct {
