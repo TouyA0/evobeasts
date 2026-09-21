@@ -195,7 +195,11 @@ func combatScreen(p *Character, m *Monster, turn int) {
 		}
 	}
 	lines = append(lines, "")
-	lines = append(lines, center(fmt.Sprintf("%s  %s", m.Name,
+	monsterLabel := m.Name
+	if len(m.Phases) > 0 {
+		monsterLabel = fmt.Sprintf("%s (%s)", m.Name, m.Phases[m.CurrentPhase].Name)
+	}
+	lines = append(lines, center(fmt.Sprintf("%s  %s", monsterLabel,
 		healthBar(m.CurrentHP, m.MaxHP, 12)), ScreenWidth))
 	if status := statusLine(m.Shield, m.Effects, false, m.Intangible); status != "" {
 		lines = append(lines, center(status, ScreenWidth))
