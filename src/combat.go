@@ -158,8 +158,6 @@ func spellMenu(p *Character, m *Monster) {
 		return
 	}
 
-	fmt.Printf("Mana : %s\n\n", healthBar(p.CurrentMana, p.MaxMana, 10))
-
 	for i, s := range castable {
 		fmt.Printf("%d. %s (%d mana)\n", i+1, s.Name, s.ManaCost)
 		fmt.Printf("   %s\n", s.Description)
