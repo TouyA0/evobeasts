@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 var merchantItems = []Item{
@@ -53,4 +54,25 @@ func merchant(p *Character) {
 		}
 		buy(p, merchantItems[choice-1])
 	}
+}
+func poisonPot(p *Character, damage, ticks int) {
+	for i := 0; i < ticks; i++ {
+		time.Sleep(1 * time.Second)
+		p.CurrentHP -= damage
+		if p.CurrentHP < 0 {
+			p.CurrentHP = 0
+		}
+		fmt.Printf("PV : %d/%d\n", p.CurrentHP, p.MaxHP)
+	}
+	isDead(p)
+}
+
+func upgradeInventorySlot(p *Character) bool {
+	if p.UpgradesUsed >= MaxExpansions {
+		fmt.Println("Augmentation max atteinte.")
+		return false
+	}
+	p.InventorySize += 10
+	p.UpgradesUsed++
+	return true
 }
