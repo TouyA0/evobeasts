@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	creatureArtWidth  = 45
+	creatureArtWidth  = 55
 )
 
 func clearScreen() {
