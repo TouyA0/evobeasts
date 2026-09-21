@@ -369,7 +369,7 @@ func loupGarouPattern(p *Character, m *Monster, turn int) {
 	}
 	if !hasRegen {
 		m.Effects = append(m.Effects, StatusEffect{
-			Name: "Régénération lunaire", TurnsLeft: 9999, HealPerTurn: 6,
+			Name: "Régénération lunaire", TurnsLeft: PermanentEffectDuration, HealPerTurn: 6,
 		})
 	}
  
@@ -406,7 +406,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		}
 		if !hasRegen {
 			m.Effects = append(m.Effects, StatusEffect{
-				Name: "Régénération abyssale", TurnsLeft: 9999, HealPerTurn: 8,
+				Name: "Régénération abyssale", TurnsLeft: PermanentEffectDuration, HealPerTurn: 8,
 			})
 		}
 		if turn%3 == 0 {

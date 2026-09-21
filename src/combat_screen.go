@@ -103,32 +103,39 @@ func healthBar(current, max, width int) string {
 	return color + "[" + bar + "]" + "\x1b[0m" + fmt.Sprintf(" %d/%d", current, max)
 }
 
-func statusLine(shield int, effects []StatusEffect, invisible, intangible bool) string {
+func statusLine(shield int, effects []StatusEffect, invisible bool, invisibleBonus int, intangible bool, skipNextTurn bool) string {
 	var parts []string
 
 	if shield > 0 {
 		parts = append(parts, fmt.Sprintf("Bouclier %d", shield))
 	}
 	if invisible {
-		parts = append(parts, "Invisible")
+		if invisibleBonus > 0 {
+			parts = append(parts, fmt.Sprintf("Invisible (+%d%%)", invisibleBonus))
+		} else {
+			parts = append(parts, "Invisible")
+		}
 	}
 	if intangible {
 		parts = append(parts, "Intangible")
 	}
+	if skipNextTurn {
+		parts = append(parts, "Étourdi")
+	}
 	for _, e := range effects {
 		switch {
 		case e.DamagePerTurn > 0:
-			parts = append(parts, fmt.Sprintf("%s (%dt)", e.Name, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("%s (%s)", e.Name, effectDuration(e.TurnsLeft)))
 		case e.HealPerTurn > 0:
-			parts = append(parts, fmt.Sprintf("%s (%dt)", e.Name, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("%s (%s)", e.Name, effectDuration(e.TurnsLeft)))
 		case e.AttackBuff > 0:
-			parts = append(parts, fmt.Sprintf("ATK +%d (%dt)", e.AttackBuff, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("ATK +%d (%s)", e.AttackBuff, effectDuration(e.TurnsLeft)))
 		case e.AttackBuff < 0:
-			parts = append(parts, fmt.Sprintf("ATK %d (%dt)", e.AttackBuff, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("ATK %d (%s)", e.AttackBuff, effectDuration(e.TurnsLeft)))
 		case e.DamageReduction > 0:
-			parts = append(parts, fmt.Sprintf("DEF +%d%% (%dt)", e.DamageReduction, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("DEF +%d%% (%s)", e.DamageReduction, effectDuration(e.TurnsLeft)))
 		case e.InitiativeDebuff > 0:
-			parts = append(parts, fmt.Sprintf("INIT -%d (%dt)", e.InitiativeDebuff, e.TurnsLeft))
+			parts = append(parts, fmt.Sprintf("INIT -%d (%s)", e.InitiativeDebuff, effectDuration(e.TurnsLeft)))
 		}
 	}
 
@@ -136,6 +143,13 @@ func statusLine(shield int, effects []StatusEffect, invisible, intangible bool) 
 		return ""
 	}
 	return "\x1b[38;2;150;150;170m" + strings.Join(parts, "  ·  ") + "\x1b[0m"
+}
+
+func effectDuration(turnsLeft int) string {
+	if turnsLeft >= PermanentEffectDuration {
+		return "permanent"
+	}
+	return fmt.Sprintf("%dt", turnsLeft)
 }
 
 func boxify(lines []string) string {
@@ -188,6 +202,15 @@ func nextPhaseHint(m *Monster) string {
 	return fmt.Sprintf("Phase suivante dans %d PV", remaining)
 }
 
+func hasCastableUltimate(p *Character) bool {
+	for _, s := range p.Spells {
+		if s.IsUltimate && s.Name != SortRenaissance {
+			return true
+		}
+	}
+	return false
+}
+
 func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 	clearScreen()
 
@@ -230,7 +253,7 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
 		fmt.Sprintf("ATK %d", m.Attack),
 	}
-	if status := statusLine(m.Shield, m.Effects, false, m.Intangible); status != "" {
+	if status := statusLine(m.Shield, m.Effects, false, 0, m.Intangible, m.SkipNextTurn); status != "" {
 		enemyInfoLines = append(enemyInfoLines, status)
 	}
 	if hint := vulnerabilityHint(m.Resistances); hint != "" {
@@ -256,8 +279,15 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 	if p.DodgeRate > 0 {
 		playerInfoLines = append(playerInfoLines, fmt.Sprintf("Esquive %d%%", p.DodgeRate))
 	}
-	if status := statusLine(p.Shield, p.Effects, p.Invisible, p.Intangible); status != "" {
+	if status := statusLine(p.Shield, p.Effects, p.Invisible, p.InvisibleBonus, p.Intangible, p.SkipNextTurn); status != "" {
 		playerInfoLines = append(playerInfoLines, status)
+	}
+	if hasCastableUltimate(p) {
+		if p.UltimateUsed {
+			playerInfoLines = append(playerInfoLines, "\x1b[38;2;150;150;170mUltime : utilisé\x1b[0m")
+		} else {
+			playerInfoLines = append(playerInfoLines, "\x1b[38;2;220;190;90mUltime : disponible\x1b[0m")
+		}
 	}
 	playerInfoLines = append(playerInfoLines, "",
 		"Tête  : "+truncateVisible(slotName(p.Equipment.Head), creatureArtWidth-8),

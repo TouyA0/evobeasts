@@ -60,6 +60,7 @@ const (
 	GainManaNiveau    = 3   // mana max gagné par niveau
 	GainAtkNiveau     = 1   // attaque gagnée par niveau
 	CoutCraft         = 5   // or dépensé par fabrication
+	PermanentEffectDuration = 9999 // pour un effet qui dure tout le combat
 )
 
 // ÉLÉMENTS
