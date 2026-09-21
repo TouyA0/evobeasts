@@ -5,6 +5,7 @@ import "fmt"
 func main() {
 	fmt.Println("=== EvoBeasts ===")
 	player := characterCreation()
+	playMusic(musicAmbiance)
 	mainMenu(player)
 }
 
@@ -36,6 +37,7 @@ func mainMenu(p *Character) {
 		case "6":
 			showArtists()
 		case "7":
+			stopMusic()
 			fmt.Println("À bientôt !")
 			return
 		default:

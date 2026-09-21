@@ -49,6 +49,13 @@ func trainingFight(p *Character, m *Monster) {
 	p.Intangible = false
 	p.UltimateUsed = false
 	p.SkipNextTurn = false
+
+	if m.Name == MonstreDragonAncien {
+		playMusic(musicBoss)
+	} else {
+		playMusic(musicCombat)
+	}
+	defer playMusic(musicAmbiance)
  
 	turn := 1
  
