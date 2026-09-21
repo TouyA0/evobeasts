@@ -66,23 +66,32 @@ func trainingFight(p *Character, m *Monster) {
 			}
 			runMonsterTurn(p, m, turn)
 			if checkPlayerDefeat(p) {
+				pauseForInput()
 				return
 			}
 		} else {
 			runMonsterTurn(p, m, turn)
 			if checkPlayerDefeat(p) {
+				pauseForInput()
 				return
 			}
 			runCharacterTurn(p, m)
 			if m.CurrentHP <= 0 {
 				endFight(p, m, true)
+				pauseForInput()
 				return
 			}
 		}
  
 		resolveEffects(p, m)
+		pauseForInput()
 		turn++
 	}
+}
+
+func pauseForInput() {
+	fmt.Print("\n(Appuyez sur Entrée pour continuer...)")
+	readInput()
 }
 
 func checkPlayerDefeat(p *Character) bool {
@@ -137,12 +146,20 @@ func basicAttack(p *Character, m *Monster) {
 }
 
 func spellMenu(p *Character, m *Monster) {
-	if len(p.Spells) == 0 {
+	castable := make([]Spell, 0, len(p.Spells))
+	for _, s := range p.Spells {
+		if s.Name != SortRenaissance {
+			castable = append(castable, s)
+		}
+	}
+ 
+	if len(castable) == 0 {
 		fmt.Println("Aucun sort connu.")
 		return
 	}
-	for i, s := range p.Spells {
+	for i, s := range castable {
 		fmt.Printf("%d. %s (%d mana)\n", i+1, s.Name, s.ManaCost)
+		fmt.Printf("   %s\n", s.Description)
 	}
 	fmt.Println("0. Retour")
 	fmt.Print("Votre choix : ")
@@ -151,16 +168,16 @@ func spellMenu(p *Character, m *Monster) {
 		return
 	}
 	idx, err := strconv.Atoi(choice)
-	if err != nil || idx < 1 || idx > len(p.Spells) {
+	if err != nil || idx < 1 || idx > len(castable) {
 		fmt.Println("Choix invalide, tour passé.")
 		return
 	}
  
-	spell := p.Spells[idx-1]
+	spell := castable[idx-1]
 	message, ok := castSpell(p, m, spell)
 	fmt.Println(message)
 	if !ok {
-		return
+		return // sort non lancé (mana insuffisant...), le tour est perdu quand même
 	}
 	if m != nil {
 		fmt.Printf("%s  PV : %d/%d\n", m.Name, m.CurrentHP, m.MaxHP)

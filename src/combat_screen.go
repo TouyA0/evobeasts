@@ -135,9 +135,7 @@ func separator() string {
 	return strings.Repeat("─", ScreenWidth)
 }
 
-// fitArt force un art à tenir dans une largeur et une hauteur données.
-// Sans ça, un dessin plus grand que CombatArtWidth/CombatArtHeight
-// déborde et casse toute la mise en page (et le cadre de boxify).
+// fitArt force un dessin ASCI dans une largeur et une hauteur max
 func fitArt(art string, maxWidth, maxHeight int) string {
 	lines := strings.Split(art, "\n")
 	if len(lines) > maxHeight {
