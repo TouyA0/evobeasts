@@ -60,10 +60,10 @@ func trainingFight(p *Character, m *Monster) {
 	turn := 1
  
 	for {
-		combatScreen(p, m, turn)
- 
 		playerFirst := effectiveInitiative(p.Initiative, p.Effects) >=
 			effectiveInitiative(m.Initiative, m.Effects)
+
+		combatScreen(p, m, turn, playerFirst)
  
 		if playerFirst {
 			runCharacterTurn(p, m)

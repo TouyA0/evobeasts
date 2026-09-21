@@ -175,11 +175,30 @@ func enemySkills(m *Monster) []string {
 	return m.Skills
 }
 
-func combatScreen(p *Character, m *Monster, turn int) {
+func nextPhaseHint(m *Monster) string {
+	if len(m.Phases) == 0 || m.CurrentPhase >= len(m.Phases)-1 {
+		return ""
+	}
+	nextThreshold := m.Phases[m.CurrentPhase+1].HPThreshold
+	pvAtNext := int(nextThreshold * float64(m.MaxHP))
+	remaining := m.CurrentHP - pvAtNext
+	if remaining < 0 {
+		remaining = 0
+	}
+	return fmt.Sprintf("Phase suivante dans %d PV", remaining)
+}
+
+func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 	clearScreen()
- 
+
 	var lines []string
-	lines = append(lines, fmt.Sprintf(" Tour %d", turn), "")
+	lines = append(lines, fmt.Sprintf(" Tour %d", turn))
+	if playerFirst {
+		lines = append(lines, "\x1b[38;2;100;220;120m▶ Vous jouez en premier\x1b[0m")
+	} else {
+		lines = append(lines, "\x1b[38;2;220;80;80m▶ L'ennemi joue en premier\x1b[0m")
+	}
+	lines = append(lines, "")
 
 	enemyHeaderText := m.Name
 	if len(m.Phases) > 0 {
@@ -206,9 +225,10 @@ func combatScreen(p *Character, m *Monster, turn int) {
 		playerArt, _ = renderImageString(imgPath, creatureArtWidth)
 	}
  
-	// --- Bloc d'infos ennemi (gauche) : PV, vulnérabilité, compétences ---
+		// --- Bloc d'infos ennemi (gauche) : PV, ATK, vulnérabilité, phase, compétences ---
 	enemyInfoLines := []string{
 		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
+		fmt.Sprintf("ATK %d", m.Attack),
 	}
 	if status := statusLine(m.Shield, m.Effects, false, m.Intangible); status != "" {
 		enemyInfoLines = append(enemyInfoLines, status)
@@ -217,16 +237,24 @@ func combatScreen(p *Character, m *Monster, turn int) {
 		enemyInfoLines = append(enemyInfoLines,
 			"\x1b[38;2;140;170;220m"+truncateVisible(hint, creatureArtWidth)+"\x1b[0m")
 	}
+	if hint := nextPhaseHint(m); hint != "" {
+		enemyInfoLines = append(enemyInfoLines,
+			"\x1b[38;2;180;140;220m"+truncateVisible(hint, creatureArtWidth)+"\x1b[0m")
+	}
 	if skills := enemySkills(m); len(skills) > 0 {
 		skillLine := "Compétences: " + strings.Join(skills, ", ")
 		enemyInfoLines = append(enemyInfoLines,
 			"\x1b[38;2;150;150;170m"+truncateVisible(skillLine, creatureArtWidth)+"\x1b[0m")
 	}
- 
+
 	// --- Bloc d'infos joueur (droite) ---
 	playerInfoLines := []string{
 		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
 		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
+		fmt.Sprintf("ATK %d", p.Attack),
+	}
+	if p.DodgeRate > 0 {
+		playerInfoLines = append(playerInfoLines, fmt.Sprintf("Esquive %d%%", p.DodgeRate))
 	}
 	if status := statusLine(p.Shield, p.Effects, p.Invisible, p.Intangible); status != "" {
 		playerInfoLines = append(playerInfoLines, status)
