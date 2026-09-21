@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("=== EvoBeasts ===")
+	displayTitleScreen()
 	player := characterCreation()
 	playMusic(musicAmbiance)
 	mainMenu(player)
