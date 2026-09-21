@@ -8,11 +8,9 @@ import (
 )
 
 const (
-	CombatArtWidth   = 34
-	CombatArtHeight  = 12
-	PlayerArtWidth   = 28
-	PlayerArtHeight  = 10
-	ScreenWidth      = 60
+	creatureArtWidth  = 45
+	creatureArtHeight = 16
+	columnGap         = 4
 )
 
 func clearScreen() {
@@ -31,15 +29,6 @@ func padRight(s string, width int) string {
 		return s
 	}
 	return s + strings.Repeat(" ", width-w)
-}
-
-func center(s string, width int) string {
-	w := visibleWidth(s)
-	if w >= width {
-		return s
-	}
-	left := (width - w) / 2
-	return strings.Repeat(" ", left) + s
 }
 
 func sideBySide(left, right string, leftWidth, gap int) string {
@@ -131,10 +120,6 @@ func statusLine(shield int, effects []StatusEffect, invisible, intangible bool) 
 	return "\x1b[38;2;150;150;170m" + strings.Join(parts, "  ·  ") + "\x1b[0m"
 }
 
-func separator() string {
-	return strings.Repeat("─", ScreenWidth)
-}
-
 // fitArt force un dessin ASCI dans une largeur et une hauteur max
 func fitArt(art string, maxWidth, maxHeight int) string {
 	lines := strings.Split(art, "\n")
@@ -184,56 +169,62 @@ func boxify(lines []string) string {
 
 func combatScreen(p *Character, m *Monster, turn int) {
 	clearScreen()
-
+ 
 	var lines []string
 	lines = append(lines, fmt.Sprintf(" Tour %d", turn), "")
-
+ 
+	enemyArt := ""
 	if ca, ok := monsterArts[m.Name]; ok {
-		fitted := fitArt(ca.Art, CombatArtWidth, CombatArtHeight)
-		for _, line := range strings.Split(artToString(fitted, ca.Colors, CombatArtWidth), "\n") {
-			lines = append(lines, center(line, ScreenWidth))
-		}
+		fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
+		enemyArt = artToString(fitted, ca.Colors, creatureArtWidth)
 	}
+ 
+	playerArt := ""
+	key := fmt.Sprintf("%s-%d", p.Species.Name, p.Stage)
+	if ca, ok := speciesArts[key]; ok {
+		fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
+		playerArt = artToString(fitted, ca.Colors, creatureArtWidth)
+	}
+ 
+	artBlock := sideBySide(enemyArt, playerArt, creatureArtWidth, columnGap)
+	lines = append(lines, strings.Split(strings.TrimRight(artBlock, "\n"), "\n")...)
 	lines = append(lines, "")
+ 
+	// --- Bloc d'infos ennemi (gauche) ---
 	monsterLabel := m.Name
 	if len(m.Phases) > 0 {
 		monsterLabel = fmt.Sprintf("%s (%s)", m.Name, m.Phases[m.CurrentPhase].Name)
 	}
-	lines = append(lines, center(fmt.Sprintf("%s  %s", monsterLabel,
-		healthBar(m.CurrentHP, m.MaxHP, 12)), ScreenWidth))
+	enemyInfoLines := []string{
+		monsterLabel,
+		healthBar(m.CurrentHP, m.MaxHP, 20),
+	}
 	if status := statusLine(m.Shield, m.Effects, false, m.Intangible); status != "" {
-		lines = append(lines, center(status, ScreenWidth))
+		enemyInfoLines = append(enemyInfoLines, status)
 	}
-	lines = append(lines, "", separator())
-
-	playerArt := ""
-	key := fmt.Sprintf("%s-%d", p.Species.Name, p.Stage)
-	if ca, ok := speciesArts[key]; ok {
-		fitted := fitArt(ca.Art, PlayerArtWidth, PlayerArtHeight)
-		playerArt = artToString(fitted, ca.Colors, PlayerArtWidth)
+	enemyInfo := strings.Join(enemyInfoLines, "\n")
+ 
+	// --- Bloc d'infos joueur (droite) ---
+	playerInfoLines := []string{
+		fmt.Sprintf("%s — %s (%s)", p.Name, p.Species.StageNames[p.Stage-1], p.Species.Element),
+		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
+		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
 	}
-
-	infos := fmt.Sprintf("%s — %s\nPV   %s\nMana %s",
-		p.Name,
-		p.Species.StageNames[p.Stage-1],
-		p.Species.Element,
-		healthBar(p.CurrentHP, p.MaxHP, 10),
-		healthBar(p.CurrentMana, p.MaxMana, 10),
-	)
 	if status := statusLine(p.Shield, p.Effects, p.Invisible, p.Intangible); status != "" {
-		infos += "\n" + status
+		playerInfoLines = append(playerInfoLines, status)
 	}
-	infos += fmt.Sprintf("\n\nTête  : %s\nTorse : %s\nPieds : %s",
-		slotName(p.Equipment.Head),
-		slotName(p.Equipment.Chest),
-		slotName(p.Equipment.Feet),
+	playerInfoLines = append(playerInfoLines, "",
+		"Tête  : "+slotName(p.Equipment.Head),
+		"Torse : "+slotName(p.Equipment.Chest),
+		"Pieds : "+slotName(p.Equipment.Feet),
 	)
-
-	for _, l := range strings.Split(sideBySide(playerArt, infos, PlayerArtWidth, 3), "\n") {
-		lines = append(lines, l)
-	}
-	lines = append(lines, separator())
-
+	playerInfo := strings.Join(playerInfoLines, "\n")
+ 
+	infoBlock := sideBySide(enemyInfo, playerInfo, creatureArtWidth, columnGap)
+	lines = append(lines, strings.Split(strings.TrimRight(infoBlock, "\n"), "\n")...)
+ 
+	lines = append(lines, "", strings.Repeat("─", creatureArtWidth*2+columnGap))
+ 
 	fmt.Print(boxify(lines))
 }
 
