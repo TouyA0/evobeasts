@@ -7,75 +7,87 @@ func allSpells() []Spell {
 		// --- Phénix (Feu) ---
 		{
 			Name: "Picorage enflammé", Element: ElementFeu,
+			Description: "Dégâts directs et laisse une brûlure qui continue de faire mal.",
 			MinStage: 2, ManaCost: 8,
 			Damage: 10, DotDamage: 3, DotDuration: 2,
 		},
 		{
 			Name: "Plumage chaud", Element: ElementFeu,
+			Description: "Restaure des PV en se réchauffant.",
 			MinStage: 2, ManaCost: 6,
 			Heal: 12,
 		},
 		{
 			Name: "Coup de bec ardent", Element: ElementFeu,
+			Description: "Un coup de bec chargé de flammes, gros dégâts directs.",
 			MinStage: 3, ManaCost: 12,
 			Damage: 22,
 		},
 		{
 			Name: "Cocorico enflammé", Element: ElementFeu,
+			Description: "Booste l'attaque pour les prochains tours.",
 			MinStage: 3, ManaCost: 10,
 			AttackBuff: 8, BuffDuration: 3,
 		},
 		{
 			Name: "Griffes de braise", Element: ElementFeu,
+			Description: "Des serres incandescentes, dégâts très élevés sur une cible unique.",
 			MinStage: 4, ManaCost: 15,
 			Damage: 32,
 		},
 		{
 			Name: "Nova solaire", Element: ElementFeu,
+			Description: "Explosion de chaleur intense, dégâts et brûlure longue durée.",
 			MinStage: 4, ManaCost: 20,
 			Damage: 18, DotDamage: 6, DotDuration: 4,
 		},
 		{
 			Name: SortRenaissance, Element: ElementFeu,
+			Description: "Renaît de ses cendres à 50 % de ses PV avec un regain de puissance. Une fois par combat.",
 			MinStage: 4, ManaCost: 0,
 			IsUltimate: true,
-			Description: "Déclenché automatiquement à 0 PV, pas via le menu de sorts : " +
-				"voir combat.go, gestion de la mort du joueur.",
 		},
  
 		// --- Kraken (Eau) ---
 		{
 			Name: "Éclaboussure", Element: ElementEau,
+			Description: "Une vague vive qui ralentit l'adversaire.",
 			MinStage: 2, ManaCost: 6,
 			Damage: 8, InitiativeDebuff: 5, DebuffDuration: 2,
 		},
 		{
 			Name: "Écailles naissantes", Element: ElementEau,
+			Description: "Durcit la peau, réduit les dégâts subis pendant quelques tours.",
 			MinStage: 2, ManaCost: 8,
 			DamageReduction: 20, ReductionDuration: 3,
 		},
 		{
 			Name: "Coup de nageoire lourd", Element: ElementEau,
+			Description: "Frappe puissante qui affaiblit l'attaque adverse.",
 			MinStage: 3, ManaCost: 10,
 			Damage: 16, AttackDebuff: 3, DebuffDuration: 1,
 		},
 		{
 			Name: "Bulle protectrice", Element: ElementEau,
+			Description: "Un bouclier d'eau qui absorbe les prochains dégâts.",
 			MinStage: 3, ManaCost: 12,
 			ShieldValue: 25,
 		},
 		{
 			Name: "Étreinte tentaculaire", Element: ElementEau,
+			Description: "Immobilise la cible, qui perd son prochain tour.",
 			MinStage: 4, ManaCost: 18,
 			Damage: 20, SkipEnemyTurn: true,
 		},
 		{
 			Name: "Raz-de-marée", Element: ElementEau,
+			Description: "Une vague massive, dégâts élevés et ralentit fortement la cible.",
 			MinStage: 4, ManaCost: 16,
 			Damage: 26, InitiativeDebuff: 8, DebuffDuration: 3,
 		},
 		{
 			Name: "Abysse", Element: ElementEau,
+			Description: "Aspire l'adversaire vers les profondeurs, dégâts continus sur la durée.",
 			MinStage: 4, ManaCost: 25,
 			DotDamage: 10, DotDuration: 5,
 			IsUltimate: true,
@@ -84,36 +96,43 @@ func allSpells() []Spell {
 		// --- Caméléon Spectral (Spectre) ---
 		{
 			Name: "Morsure furtive", Element: ElementSpectre,
+			Description: "Une attaque discrète, dégâts doublés si lancée depuis l'invisibilité.",
 			MinStage: 2, ManaCost: 7,
 			Damage: 14,
 		},
 		{
 			Name: "Camouflage", Element: ElementSpectre,
+			Description: "Devient invisible un tour, bonus de dégâts à la sortie.",
 			MinStage: 2, ManaCost: 8,
 			Invisible: true, InvisibleBonus: 50,
 		},
 		{
 			Name: "Frappe chromatique", Element: ElementSpectre,
+			Description: "Un éclair de couleurs, dégâts élevés.",
 			MinStage: 3, ManaCost: 12,
 			Damage: 24,
 		},
 		{
 			Name: "Voile chromatique", Element: ElementSpectre,
+			Description: "Invisibilité renforcée, gros bonus de dégâts à la sortie.",
 			MinStage: 3, ManaCost: 10,
 			Invisible: true, InvisibleBonus: 100,
 		},
 		{
 			Name: "Lame spectrale", Element: ElementSpectre,
+			Description: "Frappe à moitié hors du plan, ignore les résistances de la cible.",
 			MinStage: 4, ManaCost: 15,
 			Damage: 28, IgnoreResist: true,
 		},
 		{
 			Name: "Dissolution", Element: ElementSpectre,
+			Description: "Devient intangible un tour : esquive tout, mais ne peut pas agir.",
 			MinStage: 4, ManaCost: 12,
 			Intangible: true,
 		},
 		{
 			Name: SortExecutionSpectrale, Element: ElementSpectre,
+			Description: "Frappe fatale, dévastatrice si lancée depuis l'invisibilité.",
 			MinStage: 4, ManaCost: 30,
 			Damage:     25,
 			IsUltimate: true,
@@ -122,6 +141,7 @@ func allSpells() []Spell {
 		// --- Sort acheté, indépendant de toute espèce ---
 		{
 			Name: SortSoufflePrimordial, Element: ElementNeutre,
+			Description: "Un souffle d'énergie brute, dégâts neutres fiables quelle que soit l'espèce.",
 			MinStage: 0, ManaCost: 14,
 			Damage: 20,
 		},
