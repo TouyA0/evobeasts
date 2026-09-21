@@ -135,18 +135,20 @@ func sampleAvgColor(src image.Image, bounds image.Rectangle, col, row, outW, out
 		y1 = y0 + 1
 	}
 
-	var rSum, gSum, bSum, count uint32
+	var rSum, gSum, bSum, weightSum uint64
 	for y := y0; y < y1; y++ {
 		for x := x0; x < x1; x++ {
 			r, g, b, _ := src.At(x, y).RGBA()
-			rSum += r >> 8
-			gSum += g >> 8
-			bSum += b >> 8
-			count++
+			r8, g8, b8 := r>>8, g>>8, b>>8
+			weight := uint64(r8+g8+b8) + 1
+			rSum += uint64(r8) * weight
+			gSum += uint64(g8) * weight
+			bSum += uint64(b8) * weight
+			weightSum += weight
 		}
 	}
-	if count == 0 {
+	if weightSum == 0 {
 		return rgbColor{0, 0, 0}
 	}
-	return rgbColor{rSum / count, gSum / count, bSum / count}
+	return rgbColor{uint32(rSum / weightSum), uint32(gSum / weightSum), uint32(bSum / weightSum)}
 }
