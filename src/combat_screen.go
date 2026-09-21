@@ -212,6 +212,7 @@ func combatScreen(p *Character, m *Monster, turn int) {
 	infos := fmt.Sprintf("%s — %s\nPV   %s\nMana %s",
 		p.Name,
 		p.Species.StageNames[p.Stage-1],
+		p.Species.Element,
 		healthBar(p.CurrentHP, p.MaxHP, 10),
 		healthBar(p.CurrentMana, p.MaxMana, 10),
 	)
