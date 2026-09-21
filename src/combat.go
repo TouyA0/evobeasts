@@ -162,7 +162,10 @@ func spellMenu(p *Character, m *Monster) {
 		for i, s := range castable {
 			tag := ""
 			if s.Element != p.Species.Element {
-				tag = fmt.Sprintf(" [%s]", s.Element)
+				tag += fmt.Sprintf(" [%s]", s.Element)
+			}
+			if s.IsUltimate {
+				tag += " (ULTIME)"
 			}
 
 			ok, reason := canCastSpell(p, s)
