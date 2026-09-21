@@ -160,12 +160,17 @@ func spellMenu(p *Character, m *Monster) {
 
 	for {
 		for i, s := range castable {
+			tag := ""
+			if s.Element != p.Species.Element {
+				tag = fmt.Sprintf(" [%s]", s.Element)
+			}
+
 			ok, reason := canCastSpell(p, s)
 			if ok {
-				fmt.Printf("%d. %s (%d mana)\n", i+1, s.Name, s.ManaCost)
+				fmt.Printf("%d. %s%s (%d mana)\n", i+1, s.Name, tag, s.ManaCost)
 			} else {
-				fmt.Printf("\x1b[38;2;220;70;70m%d. %s (%d mana) — %s\x1b[0m\n",
-					i+1, s.Name, s.ManaCost, reason)
+				fmt.Printf("\x1b[38;2;220;70;70m%d. %s%s (%d mana) — %s\x1b[0m\n",
+					i+1, s.Name, tag, s.ManaCost, reason)
 			}
 			fmt.Printf("   %s\n", s.Description)
 		}
