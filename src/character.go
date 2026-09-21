@@ -163,8 +163,6 @@ func displayPlayerArt(p *Character) {
 	if imgPath := speciesImagePath(p.Species.Name, p.Stage); imgPath != "" {
 		if rendered, ok := renderImageString(imgPath, infoArtWidth); ok {
 			fmt.Println(rendered)
-			return
 		}
 	}
-	displayCreature(p.Species.Name, p.Stage)
 }

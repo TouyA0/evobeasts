@@ -9,7 +9,6 @@ import (
 
 const (
 	creatureArtWidth  = 45
-	creatureArtHeight = 16
 )
 
 func clearScreen() {
@@ -139,36 +138,6 @@ func statusLine(shield int, effects []StatusEffect, invisible, intangible bool) 
 	return "\x1b[38;2;150;150;170m" + strings.Join(parts, "  ·  ") + "\x1b[0m"
 }
 
-// fitArt force un dessin ASCI dans une largeur et une hauteur max
-func fitArt(art string, maxWidth, maxHeight int) string {
-	lines := strings.Split(art, "\n")
-	if len(lines) > maxHeight {
-		lines = lines[:maxHeight]
-	}
-	for i, line := range lines {
-		runes := []rune(line)
-		if len(runes) > maxWidth {
-			lines[i] = string(runes[:maxWidth])
-		}
-	}
-	return strings.Join(lines, "\n")
-}
-
-func artToString(art string, colors [][3]int, width int) string {
-	lines := strings.Split(art, "\n")
-	var out strings.Builder
-	for i, line := range lines {
-		c := colors[i%len(colors)]
-		padded := padRight(line, width)
-		out.WriteString(fmt.Sprintf("\x1b[38;2;%d;%d;%dm%s\x1b[0m",
-			c[0], c[1], c[2], padded))
-		if i < len(lines)-1 {
-			out.WriteString("\n")
-		}
-	}
-	return out.String()
-}
-
 func boxify(lines []string) string {
 	width := 0
 	for _, l := range lines {
@@ -229,29 +198,12 @@ func combatScreen(p *Character, m *Monster, turn int) {
 
 	enemyArt := ""
 	if imgPath := monsterImagePath(m.Name); imgPath != "" {
-		if rendered, ok := renderImageString(imgPath, creatureArtWidth); ok {
-			enemyArt = rendered
-		}
+		enemyArt, _ = renderImageString(imgPath, creatureArtWidth)
 	}
-	if enemyArt == "" {
-		if ca, ok := monsterArts[m.Name]; ok {
-			fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
-			enemyArt = artToString(fitted, ca.Colors, creatureArtWidth)
-		}
-	}
- 
+
 	playerArt := ""
 	if imgPath := speciesImagePath(p.Species.Name, p.Stage); imgPath != "" {
-		if rendered, ok := renderImageString(imgPath, creatureArtWidth); ok {
-			playerArt = rendered
-		}
-	}
-	if playerArt == "" {
-		key := fmt.Sprintf("%s-%d", p.Species.Name, p.Stage)
-		if ca, ok := speciesArts[key]; ok {
-			fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
-			playerArt = artToString(fitted, ca.Colors, creatureArtWidth)
-		}
+		playerArt, _ = renderImageString(imgPath, creatureArtWidth)
 	}
  
 	// --- Bloc d'infos ennemi (gauche) : PV, vulnérabilité, compétences ---
