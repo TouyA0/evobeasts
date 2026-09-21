@@ -253,6 +253,7 @@ type Monster struct {
 	Attack     int
 	Initiative int
 	Element    Element
+	Skills []string
  
 	// Résistances hors phases
 	Resistances map[Element]float64
