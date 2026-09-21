@@ -228,16 +228,30 @@ func combatScreen(p *Character, m *Monster, turn int) {
 	playerHeader := "\x1b[38;2;100;220;120m" + centerText(playerHeaderText, creatureArtWidth) + "\x1b[0m"
 
 	enemyArt := ""
-	if ca, ok := monsterArts[m.Name]; ok {
-		fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
-		enemyArt = artToString(fitted, ca.Colors, creatureArtWidth)
+	if imgPath := monsterImagePath(m.Name); imgPath != "" {
+		if rendered, ok := renderImageString(imgPath, creatureArtWidth); ok {
+			enemyArt = rendered
+		}
+	}
+	if enemyArt == "" {
+		if ca, ok := monsterArts[m.Name]; ok {
+			fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
+			enemyArt = artToString(fitted, ca.Colors, creatureArtWidth)
+		}
 	}
  
 	playerArt := ""
-	key := fmt.Sprintf("%s-%d", p.Species.Name, p.Stage)
-	if ca, ok := speciesArts[key]; ok {
-		fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
-		playerArt = artToString(fitted, ca.Colors, creatureArtWidth)
+	if imgPath := speciesImagePath(p.Species.Name, p.Stage); imgPath != "" {
+		if rendered, ok := renderImageString(imgPath, creatureArtWidth); ok {
+			playerArt = rendered
+		}
+	}
+	if playerArt == "" {
+		key := fmt.Sprintf("%s-%d", p.Species.Name, p.Stage)
+		if ca, ok := speciesArts[key]; ok {
+			fitted := fitArt(ca.Art, creatureArtWidth, creatureArtHeight)
+			playerArt = artToString(fitted, ca.Colors, creatureArtWidth)
+		}
 	}
  
 	// --- Bloc d'infos ennemi (gauche) : PV, vulnérabilité, compétences ---

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"io"
 	"os"
+	"strings"
 )
 
 var quadrantGlyphs = [16]rune{
@@ -15,23 +17,34 @@ var quadrantGlyphs = [16]rune{
 }
 
 type rgbColor struct{ r, g, b uint32 }
+
 func displayImage(path string, width int) bool {
+	str, ok := renderImageString(path, width)
+	if !ok {
+		return false
+	}
+	fmt.Println(str)
+	return true
+}
+
+func renderImageString(path string, width int) (string, bool) {
 	f, err := os.Open(path)
 	if err != nil {
-		return false
+		return "", false
 	}
 	defer f.Close()
 
 	src, _, err := image.Decode(f)
 	if err != nil {
-		return false
+		return "", false
 	}
 
-	printImageQuadrant(src, width)
-	return true
+	var buf strings.Builder
+	writeImageQuadrant(&buf, src, width)
+	return strings.TrimRight(buf.String(), "\n"), true
 }
 
-func printImageQuadrant(src image.Image, width int) {
+func writeImageQuadrant(w io.Writer, src image.Image, width int) {
 	bounds := src.Bounds()
 	srcW, srcH := bounds.Dx(), bounds.Dy()
 	if srcW == 0 || srcH == 0 {
@@ -52,13 +65,13 @@ func printImageQuadrant(src image.Image, width int) {
 			bl := sampleAvgColor(src, bounds, col*2, row*2+1, sampleW, sampleH)
 			br := sampleAvgColor(src, bounds, col*2+1, row*2+1, sampleW, sampleH)
 
-			printQuadrantCell(tl, tr, bl, br)
+			writeQuadrantCell(w, tl, tr, bl, br)
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 }
 
-func printQuadrantCell(tl, tr, bl, br rgbColor) {
+func writeQuadrantCell(w io.Writer, tl, tr, bl, br rgbColor) {
 	corners := [4]rgbColor{tl, tr, bl, br}
 
 	bestMask := 0
@@ -83,7 +96,7 @@ func printQuadrantCell(tl, tr, bl, br rgbColor) {
 	}
 
 	fg, bg := splitColors(corners, bestMask)
-	fmt.Printf("\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm%c\x1b[0m",
+	fmt.Fprintf(w, "\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm%c\x1b[0m",
 		fg.r, fg.g, fg.b, bg.r, bg.g, bg.b, quadrantGlyphs[bestMask])
 }
 
