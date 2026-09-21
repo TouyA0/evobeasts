@@ -27,13 +27,12 @@ func gainGold(p *Character, amount int) {
 }
 
 func levelUp(p *Character) {
-	p.Experience -= p.MaxExperience // l'excédent est reporté
+	p.Experience -= p.MaxExperience
 	p.Level++
 	p.MaxExperience = xpForNextLevel(p.Level)
-	p.MaxHP += 5
-	p.CurrentHP += 5
-	p.MaxMana += 3
-	p.CurrentMana += 3
-	p.Attack++
-	fmt.Printf("NIVEAU %d ! +5 PV max, +3 mana max, +1 attaque\n", p.Level)
+	recalculateStats(p) // recalcule MaxHP/MaxMana/Attack depuis zéro, pas de +=
+	p.CurrentHP = p.MaxHP
+	p.CurrentMana = p.MaxMana
+	fmt.Printf("NIVEAU %d ! +%d PV max, +%d mana max, +%d attaque\n",
+		p.Level, GainPVNiveau, GainManaNiveau, GainAtkNiveau)
 }

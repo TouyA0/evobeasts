@@ -3,22 +3,24 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"time"
 )
 
-var merchantItems = []Item{
-	{Name: "Potion de vie", Type: ItemPotion, Price: 3, HealValue: 50},
-	{Name: "Potion de poison", Type: ItemPotion, Price: 6, PoisonDamage: 10, PoisonTicks: 3},
-	{Name: "Livre de Sort : Boule de Feu", Type: ItemSpellbook, Price: 25, SpellName: "Boule de Feu"},
-	{Name: "Fourrure de Loup", Type: ItemResource, Price: 4},
-	{Name: "Peau de Troll", Type: ItemResource, Price: 7},
-	{Name: "Cuir de Sanglier", Type: ItemResource, Price: 3},
-	{Name: "Plume de Corbeau", Type: ItemResource, Price: 1},
-	{Name: "Augmentation d'inventaire", Type: ItemUpgrade, Price: 30},
+func merchantCatalog() []Item {
+	return []Item{
+		{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50},
+		{Name: PotionPoison, Type: ItemPotion, Price: 6, PoisonDamage: 10, PoisonTicks: 3},
+		{Name: PotionMana, Type: ItemPotion, Price: 5, ManaValue: 30},
+		{Name: GrimoireSoufle, Type: ItemSpellbook, Price: 25, SpellName: SortSoufflePrimordial},
+		{Name: ResEcaille, Type: ItemResource, Price: 4},
+		{Name: ResAbyssal, Type: ItemResource, Price: 7},
+		{Name: ResSpectre, Type: ItemResource, Price: 3},
+		{Name: ResPlume, Type: ItemResource, Price: 1},
+		{Name: ExpansionSac, Type: ItemUpgrade, Price: 30},
+	}
 }
 
 // on ne débite que si l'achat a réussi
-func buy(p *Character, item Item) bool {
+func buyItem(p *Character, item Item) bool {
 	if p.Gold < item.Price {
 		fmt.Println("Pas assez d'or.")
 		return false
@@ -36,35 +38,23 @@ func buy(p *Character, item Item) bool {
 	return true
 }
 
-func merchant(p *Character) {
+func merchantMenu(p *Character) {
+	items := merchantCatalog()
+
 	for {
 		fmt.Printf("\n=== Marchand === (Or : %d)\n", p.Gold)
-		for i, it := range merchantItems {
-			fmt.Printf("%d. %s (%d or)\n", i+1, it.Name, it.Price)
-		}
-		fmt.Println("0. Retour")
+		merchantDisplay(items)
 
 		choice, err := strconv.Atoi(readInput())
-		if err != nil || choice < 0 || choice > len(merchantItems) {
+		if err != nil || choice < 0 || choice > len(items) {
 			fmt.Println("Choix invalide.")
 			continue
 		}
 		if choice == 0 {
 			return
 		}
-		buy(p, merchantItems[choice-1])
+		buyItem(p, items[choice-1])
 	}
-}
-func poisonPot(p *Character, damage, ticks int) {
-	for i := 0; i < ticks; i++ {
-		time.Sleep(1 * time.Second)
-		p.CurrentHP -= damage
-		if p.CurrentHP < 0 {
-			p.CurrentHP = 0
-		}
-		fmt.Printf("PV : %d/%d\n", p.CurrentHP, p.MaxHP)
-	}
-	isDead(p)
 }
 
 func upgradeInventorySlot(p *Character) bool {
@@ -75,4 +65,11 @@ func upgradeInventorySlot(p *Character) bool {
 	p.InventorySize += 10
 	p.UpgradesUsed++
 	return true
+}
+
+func merchantDisplay(items []Item) {
+	for i, it := range items {
+		fmt.Printf("%d. %s (%d or)\n", i+1, it.Name, it.Price)
+	}
+	fmt.Println("0. Retour")
 }
