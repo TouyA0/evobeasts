@@ -1,105 +1,159 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
 
-var phoenix = []Character{
-	{Species: Species{Name: "Œuf ardent"}, Stage: 1, MaxHP: 50, MaxMana: 40, Attack: 5},
-	{Species: Species{Name: "Poussin"}, Stage: 2, MaxHP: 60, MaxMana: 45, Attack: 8},
-	{Species: Species{Name: "Poulet"}, Stage: 3, MaxHP: 80, MaxMana: 50, Attack: 12},
-	{Species: Species{Name: "Phénix"}, Stage: 4, MaxHP: 100, MaxMana: 70, Attack: 20},
-}
-
-var kraken = []Character{
-	{Species: Species{Name: "Œuf immergé"}, Stage: 1, MaxHP: 75, MaxMana: 30, Attack: 5},
-	{Species: Species{Name: "Alevin"}, Stage: 2, MaxHP: 100, MaxMana: 35, Attack: 7},
-	{Species: Species{Name: "Poisson"}, Stage: 3, MaxHP: 140, MaxMana: 40, Attack: 10},
-	{Species: Species{Name: "Kraken"}, Stage: 4, MaxHP: 200, MaxMana: 60, Attack: 15},
-}
-
-var chameleon = []Character{
-	{Species: Species{Name: "Œuf voilé"}, Stage: 1, MaxHP: 45, MaxMana: 35, Attack: 5},
-	{Species: Species{Name: "Caméléonneau"}, Stage: 2, MaxHP: 55, MaxMana: 40, Attack: 9},
-	{Species: Species{Name: "Caméléon"}, Stage: 3, MaxHP: 70, MaxMana: 50, Attack: 14},
-	{Species: Species{Name: "Caméléon Spectral"}, Stage: 4, MaxHP: 90, MaxMana: 65, Attack: 25},
-}
-
+var reader = bufio.NewReader(os.Stdin)
 func readInput() string {
-	var input string
-	fmt.Scanln(&input)
+	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
 }
 
-func characterCreation() *Character {
-	var name string
-	var choice string
+func formatName(s string) string {
+	s = strings.ToLower(s)
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
 
+func isLettersOnly(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')) {
+			return false
+		}
+	}
+	return true
+}
+
+func characterCreation() *Character {
 	fmt.Println("Entrez le nom de votre personnage :")
-	name = readInput()
+	name := readInput()
+	for !isLettersOnly(name) {
+		fmt.Println("Le nom ne doit contenir que des lettres. Réessayez :")
+		name = readInput()
+	}
+	name = formatName(name)
 
 	fmt.Println("Choisissez votre œuf :")
 	fmt.Println("1. Œuf ardent - DPS / Feu")
 	fmt.Println("2. Œuf immergé - Tank / Eau")
-	fmt.Println("3. Œuf voilé - Assassin / Spectral")
-	choice = readInput()
+	fmt.Println("3. Œuf voilé - Assassin / Spectre")
+	choice := readInput()
 
 	for choice != "1" && choice != "2" && choice != "3" {
 		fmt.Println("Veuillez entrer un nombre valide (1, 2 ou 3) :")
 		choice = readInput()
 	}
 
-	var species Species
-
+	var speciesName string
 	switch choice {
 	case "1":
-		species = Species{Name: "Œuf ardent"}
+		speciesName = EspecePhenix
 	case "2":
-		species = Species{Name: "Œuf immergé"}
+		speciesName = EspeceKraken
 	case "3":
-		species = Species{Name: "Œuf voilé"}
+		speciesName = EspeceSpectre
 	}
+
+	species := speciesByName(speciesName)
 
 	return initCharacter(name, species)
 }
 
 func initCharacter(name string, species Species) *Character {
-	character := &Character{
+	p := &Character{
 		Name:    name,
 		Species: species,
 		Stage:   1,
+		Level:   1,
 	}
 
-	switch {
-	case strings.EqualFold(species.Name, "Œuf ardent"):
-		character.MaxHP = phoenix[0].MaxHP
-		character.MaxMana = phoenix[0].MaxMana
-		character.Attack = phoenix[0].Attack
+	recalculateStats(p)
 
-	case strings.EqualFold(species.Name, "Œuf immergé"):
-		character.MaxHP = kraken[0].MaxHP
-		character.MaxMana = kraken[0].MaxMana
-		character.Attack = kraken[0].Attack
+	p.CurrentHP = p.MaxHP / 2
+	p.CurrentMana = p.MaxMana
 
-	case strings.EqualFold(species.Name, "Œuf voilé"):
-		character.MaxHP = chameleon[0].MaxHP
-		character.MaxMana = chameleon[0].MaxMana
-		character.Attack = chameleon[0].Attack
+	p.Initiative = species.Initiative
+	p.DodgeRate = species.DodgeRate
+
+	p.Gold = OrDepart
+	p.InventorySize = InventaireBase
+	p.MaxExperience = xpForNextLevel(p.Level)
+
+	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50})
+	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50})
+
+	return p
+}
+
+func recalculateStats(p *Character) {
+	bonusHP, bonusMana := equipmentBonus(p.Equipment)
+
+	p.MaxHP = p.Species.BaseMaxHP +
+		p.Species.HPPerStage*(p.Stage-1) +
+		GainPVNiveau*(p.Level-1) +
+		bonusHP
+
+	p.MaxMana = p.Species.BaseMaxMana +
+		p.Species.ManaPerStage*(p.Stage-1) +
+		GainManaNiveau*(p.Level-1) +
+		bonusMana
+
+	p.Attack = p.Species.BaseAttack +
+		p.Species.AttackPerStage*(p.Stage-1) +
+		GainAtkNiveau*(p.Level-1)
+
+	if p.CurrentHP > p.MaxHP {
+		p.CurrentHP = p.MaxHP
 	}
+	if p.CurrentMana > p.MaxMana {
+		p.CurrentMana = p.MaxMana
+	}
+}
 
-	character.CurrentHP = character.MaxHP
-
-	return character
+func isDead(p *Character) bool {
+	if p.CurrentHP > 0 {
+		return false
+	}
+ 
+	if p.Species.Name == EspecePhenix {
+		p.CurrentHP = p.MaxHP / 2
+		fmt.Println(p.Name + " renaît de ses cendres avec la moitié de ses PV.")
+		return true
+	}
+ 
+	p.CurrentHP = 1
+	fmt.Println(p.Name + " est vaincu et ne se relève qu'à grand-peine (1 PV).")
+	return true
 }
 
 func displayInfo(p *Character) {
 	fmt.Printf("Nom : %s\n", p.Name)
-	fmt.Printf("Œuf : %s\n", p.Species.Name)
-	fmt.Printf("Palier : %d\n", p.Stage)
-	fmt.Printf("HP : %d/%d\n", p.CurrentHP, p.MaxHP)
-	fmt.Printf("Mana : %d\n", p.MaxMana)
-	fmt.Printf("Attack : %d\n", p.Attack)
+	fmt.Printf("Espèce : %s (%s)\n", p.Species.Name, p.Species.Element)
+	fmt.Printf("Palier : %d — %s\n", p.Stage, currentStageName(p))
+	fmt.Printf("Niveau : %d (XP : %d/%d)\n", p.Level, p.Experience, p.MaxExperience)
+	fmt.Printf("PV   : %d/%d\n", p.CurrentHP, p.MaxHP)
+	fmt.Printf("Mana : %d/%d\n", p.CurrentMana, p.MaxMana)
+	fmt.Printf("Attaque : %d\n", p.Attack)
+	fmt.Printf("Or : %d\n", p.Gold)
+
+	fmt.Println("Équipement :")
+	equipmentDisplay(p.Equipment)
+
+	if len(p.Spells) > 0 {
+		fmt.Println("Sorts connus :")
+		for _, s := range p.Spells {
+			fmt.Printf("  - %s\n", s.Name)
+		}
+	}
 
 	displayCreature(p.Species.Name, p.Stage)
 }
