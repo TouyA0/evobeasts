@@ -145,6 +145,29 @@ func basicAttack(p *Character, m *Monster) {
 	announcePhaseChange(m)
 }
 
+func spellIcon(s Spell) string {
+	switch {
+	case s.IsUltimate:
+		return "💀"
+	case s.Heal > 0:
+		return "💚"
+	case s.ShieldValue > 0:
+		return "🛡️"
+	case s.Invisible:
+		return "👻"
+	case s.Intangible:
+		return "🌫️"
+	case s.DotDamage > 0:
+		return "🔥"
+	case s.AttackBuff > 0:
+		return "⚡"
+	case s.Damage > 0:
+		return "💥"
+	default:
+		return "✨"
+	}
+}
+
 func spellMenu(p *Character, m *Monster) {
 	castable := make([]Spell, 0, len(p.Spells))
 	for _, s := range p.Spells {
@@ -170,10 +193,10 @@ func spellMenu(p *Character, m *Monster) {
 
 			ok, reason := canCastSpell(p, s)
 			if ok {
-				fmt.Printf("%d. %s%s (%d mana)\n", i+1, s.Name, tag, s.ManaCost)
+				fmt.Printf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost)
 			} else {
-				fmt.Printf("\x1b[38;2;220;70;70m%d. %s%s (%d mana) — %s\x1b[0m\n",
-					i+1, s.Name, tag, s.ManaCost, reason)
+				fmt.Printf("\x1b[38;2;220;70;70m%d. %s %s%s (%d mana) — %s\x1b[0m\n",
+					i+1, spellIcon(s), s.Name, tag, s.ManaCost, reason)
 			}
 			fmt.Printf("   %s\n", s.Description)
 		}
