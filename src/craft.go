@@ -1,35 +1,10 @@
 package main
 
-import "fmt"
-
-func recipes() []Recipe {
-	return []Recipe{
-		{
-			Result:   ArtefactTete,
-			GoldCost: 5,
-			Materials: map[string]int{
-				ResPlume:  1,
-				ResEcaille: 1,
-			},
-		},
-		{
-			Result:   ArtefactTorse,
-			GoldCost: 5,
-			Materials: map[string]int{
-				ResAbyssal: 2,
-				ResEcaille: 1,
-			},
-		},
-		{
-			Result:   ArtefactPieds,
-			GoldCost: 5,
-			Materials: map[string]int{
-				ResSpectre: 1,
-				ResEcaille: 1,
-			},
-		},
-	}
-}
+import (
+	"fmt"
+	"sort"
+	"strconv"
+)
 
 func recipes() []Recipe {
 	return []Recipe{
@@ -77,62 +52,96 @@ func recipes() []Recipe {
 	}
 }
 
-func canCraft(p *Character, r Recipe) bool {
+func canCraft(p *Character, r Recipe) (bool, string) {
 	if p.Gold < r.GoldCost {
-		return false
+		return false, "Pas assez d'or."
 	}
 
-	if len(p.Inventory) >= p.InventorySize {
-		return false
+	materialsCount := 0
+	for _, needed := range r.Materials {
+		materialsCount += needed
+	}
+	if len(p.Inventory)-materialsCount >= p.InventorySize {
+		return false, "Pas assez de place dans l'inventaire."
 	}
 
 	for resource, needed := range r.Materials {
-		count := 0
-
-		for _, item := range p.Inventory {
-			if item.Type == ItemResource && item.Name == resource {
-				count++
-			}
-		}
-
-		if count < needed {
-			return false
+		if countItem(p, resource) < needed {
+			return false, "Ressources manquantes : " + resource
 		}
 	}
 
-	return true
+	return true, ""
 }
 
-func craftItem(p *Character, r Recipe) {
+func craftItem(p *Character, r Recipe) bool {
+	ok, _ := canCraft(p, r)
+	if !ok {
+		return false
+	}
+
 	p.Gold -= r.GoldCost
 
 	for resource, needed := range r.Materials {
-		removed := 0
-
-		for i := 0; i < len(p.Inventory) && removed < needed; {
-			if p.Inventory[i].Type == ItemResource && p.Inventory[i].Name == resource {
-				p.Inventory = append(p.Inventory[:i], p.Inventory[i+1:]...)
-				removed++
-			} else {
-				i++
-			}
+		for i := 0; i < needed; i++ {
+			removeInventory(p, resource)
 		}
 	}
 
 	p.Inventory = append(p.Inventory, r.Result)
+	return true
 }
 
-func craftDisplay(recipes []Recipe) {
-	for i, recipe := range recipes {
-		fmt.Println(i+1, "-", recipe.Result.Name)
-		fmt.Println("Coût :", recipe.GoldCost, "or")
-		fmt.Println("Ressources :")
+func craftDisplay(recipeList []Recipe) {
+	for i, recipe := range recipeList {
+		fmt.Printf("%d. %s (%d or)\n", i+1, recipe.Result.Name, recipe.GoldCost)
 
-		for resource, quantity := range recipe.Materials {
-			fmt.Println("-", quantity, resource)
+		names := make([]string, 0, len(recipe.Materials))
+		for resource := range recipe.Materials {
+			names = append(names, resource)
+		}
+		sort.Strings(names)
+
+		for _, resource := range names {
+			fmt.Printf("   - %d %s\n", recipe.Materials[resource], resource)
+		}
+		fmt.Println()
+	}
+	fmt.Println("0. Retour")
+}
+
+func craftMenu(p *Character) {
+	list := recipes()
+
+	for {
+		fmt.Printf("\n=== Forgeron === (Or : %d)\n", p.Gold)
+		craftDisplay(list)
+		fmt.Print("Votre choix : ")
+
+		choice := readInput()
+		if choice == "0" {
+			return
 		}
 
-		fmt.Println()
+		idx, err := strconv.Atoi(choice)
+		if err != nil || idx < 1 || idx > len(list) {
+			fmt.Println("Choix invalide.")
+			continue
+		}
+
+		recipe := list[idx-1]
+		ok, reason := canCraft(p, recipe)
+		if !ok {
+			fmt.Println(reason)
+			continue
+		}
+
+		craftItem(p, recipe)
+		fmt.Println("Vous avez fabriqué : " + recipe.Result.Name)
 	}
 }
 
+func showArtists() {
+	fmt.Println("Partie 2 (l'économie) fait référence à des chansons d'ABBA.")
+	fmt.Println("Partie 3 (le combat) fait référence à des films de Steven Spielberg.")
+}
