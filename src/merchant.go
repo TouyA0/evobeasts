@@ -79,15 +79,32 @@ func upgradeInventorySlot(p *Character) bool {
 }
 
 func merchantDisplay(items []Item, gold int) {
-	for i, it := range items {
-		line := fmt.Sprintf("%d. %-30s (%d or)", i+1, it.Name, it.Price)
-		if it.Price > gold {
-			line = "\x1b[90m" + line + "\x1b[0m"
-		}
-		fmt.Println(line)
-		if it.Description != "" {
-			fmt.Printf("   \x1b[3;90m%s\x1b[0m\n", it.Description)
+	categories := []struct {
+		label string
+		typ   ItemType
+	}{
+		{"Consommables", ItemPotion},
+		{"Matériaux", ItemResource},
+		{"Objets rares", ItemSpellbook},
+		{"Améliorations", ItemUpgrade},
+	}
+
+	for _, cat := range categories {
+		printed := false
+		for i, it := range items {
+			if it.Type != cat.typ {
+				continue
+			}
+			if !printed {
+				fmt.Printf("\n-- %s --\n", cat.label)
+				printed = true
+			}
+			line := fmt.Sprintf("%d. %-30s (%d or)", i+1, it.Name, it.Price)
+			if it.Price > gold {
+				line = "\x1b[90m" + line + "\x1b[0m"
+			}
+			fmt.Println(line)
 		}
 	}
-	fmt.Println("0. Retour")
+	fmt.Println("\n0. Retour")
 }
