@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -38,6 +39,37 @@ func countItem(character *Character, name string) int {
 	return count
 }
 
+func itemDescription(item Item) string {
+	switch {
+	case item.HealValue > 0:
+		return fmt.Sprintf("Rend %d PV", item.HealValue)
+	case item.ManaValue > 0:
+		return fmt.Sprintf("Rend %d Mana", item.ManaValue)
+	case item.PoisonDamage > 0:
+		return fmt.Sprintf("Poison : %d dégâts sur %d tours", item.PoisonDamage, item.PoisonTicks)
+	case item.Type == ItemArtifact:
+		var parts []string
+		if item.Slot != SlotNone {
+			parts = append(parts, "Emplacement : "+string(item.Slot))
+		}
+		if item.BonusMaxHP > 0 {
+			parts = append(parts, fmt.Sprintf("+%d PV max", item.BonusMaxHP))
+		}
+		if item.BonusMaxMana > 0 {
+			parts = append(parts, fmt.Sprintf("+%d Mana max", item.BonusMaxMana))
+		}
+		return strings.Join(parts, ", ")
+	case item.Type == ItemSpellbook:
+		return "Enseigne : " + item.SpellName
+	case item.Type == ItemResource:
+		return "Matériau de craft"
+	case item.Type == ItemUpgrade:
+		return "Agrandit l'inventaire"
+	default:
+		return ""
+	}
+}
+
 func accessInventory(character *Character) {
 	if len(character.Inventory) == 0 {
 		fmt.Println("Inventaire vide.")
@@ -46,7 +78,11 @@ func accessInventory(character *Character) {
 
 	fmt.Println("Inventaire :")
 	for i, item := range character.Inventory {
-		fmt.Printf("%d. %s\n", i+1, item.Name)
+		if desc := itemDescription(item); desc != "" {
+			fmt.Printf("%d. %s — %s\n", i+1, item.Name, desc)
+		} else {
+			fmt.Printf("%d. %s\n", i+1, item.Name)
+		}
 	}
 	fmt.Println("0. Retour")
 	fmt.Print("Votre choix : ")

@@ -337,7 +337,11 @@ func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 		var b strings.Builder
 		b.WriteString("Inventaire :\n")
 		for i, item := range p.Inventory {
-			b.WriteString(fmt.Sprintf("%d. %s\n", i+1, item.Name))
+			if desc := itemDescription(item); desc != "" {
+				b.WriteString(fmt.Sprintf("%d. %s — %s\n", i+1, item.Name, desc))
+			} else {
+				b.WriteString(fmt.Sprintf("%d. %s\n", i+1, item.Name))
+			}
 		}
 		b.WriteString("0. Retour\n")
 		if message != "" {
