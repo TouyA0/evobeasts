@@ -78,7 +78,7 @@ func accessInventory(character *Character) {
 		}
 
 		clearScreen()
-		fmt.Println("Inventaire :")
+		displayBanner(bannerInventaire)
 		for i, item := range character.Inventory {
 			if desc := itemDescription(item); desc != "" {
 				fmt.Printf("%d. %s — %s\n", i+1, item.Name, desc)
