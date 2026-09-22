@@ -4,6 +4,7 @@ import "fmt"
 
 func main() {
 	displayTitleScreen()
+	playMusic(musicAmbiance)
 	fmt.Println()
 	fmt.Println("Appuyez sur Entrée pour continuer...")
 	readInput()
@@ -11,8 +12,6 @@ func main() {
  
 	player := characterCreation()
 	clearScreen()
- 
-	playMusic(musicAmbiance)
  
 	mainMenu(player)
 }
