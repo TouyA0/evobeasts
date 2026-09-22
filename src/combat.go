@@ -34,10 +34,11 @@ func combatMenu(p *Character) {
 		}
  
 		monster := monsterByTier(tier)
+		storyPreFight(p, tier)
 		trainingFight(p, monster)
  
 		if isGameComplete(p) {
-			fmt.Println("\n*** Le Dragon Ancien est vaincu. EvoBeasts est terminé. ***")
+			storyFinale(p)
 			return
 		}
 	}
@@ -72,6 +73,7 @@ func trainingFight(p *Character, m *Monster) {
 			if m.CurrentHP <= 0 {
 				endFight(p, m, true)
 				pauseForInput()
+				storyPostFight(p, m.Tier)
 				return
 			}
 			runMonsterTurn(p, m, turn)
@@ -89,6 +91,7 @@ func trainingFight(p *Character, m *Monster) {
 			if m.CurrentHP <= 0 {
 				endFight(p, m, true)
 				pauseForInput()
+				storyPostFight(p, m.Tier)
 				return
 			}
 		}
@@ -727,6 +730,7 @@ func endFight(p *Character, m *Monster, won bool) {
 		before := currentStageName(p)
 		evolve(p)
 		fmt.Println(onEvolve(p, before))
+		storyEvolve(p)
 	}
  
 	if p.MaxTierDefeated < m.Tier {

@@ -9,10 +9,9 @@ func main() {
 	fmt.Println("Appuyez sur Entrée pour continuer...")
 	readInput()
 	clearScreen()
- 
+	storyPrologue()
 	player := characterCreation()
 	clearScreen()
- 
 	mainMenu(player)
 }
 
@@ -35,7 +34,8 @@ func mainMenu(p *Character) {
 			"4. Forgeron",
 			"5. Combat",
 			"6. Qui sont-ils ?",
-			"7. Quitter",
+			"7. Mémoires de la vallée",
+			"8. Quitter",
 		}
 		fmt.Print(boxify(lines))
 		fmt.Print("Votre choix : ")
@@ -54,14 +54,21 @@ func mainMenu(p *Character) {
 			craftMenu(p)
 		case "5":
 			combatMenu(p)
+			if isGameComplete(p) {
+				stopMusic()
+				return
+			}
 		case "6":
 			showArtists()
 		case "7":
+			storyJournal()
+			continue
+		case "8":
 			stopMusic()
 			fmt.Println("À bientôt !")
 			return
 		default:
-			fmt.Println("Choix invalide. Veuillez entrer un chiffre entre 1 et 7.")
+			fmt.Println("Choix invalide. Veuillez entrer un chiffre entre 1 et 8.")
 		}
 
 		pauseForInput()

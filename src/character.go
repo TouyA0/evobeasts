@@ -34,7 +34,7 @@ func isLettersOnly(s string) bool {
 }
 
 func characterCreation() *Character {
-	fmt.Println("Entrez le nom de votre personnage :")
+	fmt.Println(storyNamePrompt())
 	name := readInput()
 	for !isLettersOnly(name) {
 		fmt.Println("Le nom ne doit contenir que des lettres. Réessayez :")
@@ -43,9 +43,9 @@ func characterCreation() *Character {
 	name = formatName(name)
 
 	fmt.Println("Choisissez votre œuf :")
-	fmt.Println("1. Œuf ardent - DPS / Feu")
-	fmt.Println("2. Œuf immergé - Tank / Eau")
-	fmt.Println("3. Œuf voilé - Assassin / Spectre")
+	for _, l := range storyEggLines() {
+		fmt.Println(l)
+	}
 	choice := readInput()
 
 	for choice != "1" && choice != "2" && choice != "3" {
@@ -65,7 +65,9 @@ func characterCreation() *Character {
 
 	species := speciesByName(speciesName)
 
-	return initCharacter(name, species)
+	p := initCharacter(name, species)
+	storyHatch(p)
+	return p
 }
 
 func initCharacter(name string, species Species) *Character {

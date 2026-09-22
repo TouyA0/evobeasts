@@ -79,7 +79,9 @@ func initSanglier() *Monster {
 			{Item: Item{Name: ResEcaille, Type: ItemResource, Price: 4}, Chance: 60},
 		},
 	}
-	m.Resistances = m.Phases[m.CurrentPhase].Resistances
+	m.Resistances = map[Element]float64{
+		ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
+	}
 	return m
 }
  
