@@ -47,8 +47,7 @@ func merchantMenu(p *Character) {
 		displayBanner(bannerMerchant)
 		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
 		fmt.Println(strings.Repeat("─", 30))
-		merchantDisplay(items)
-		merchantDisplay(items)
+		merchantDisplay(items, p.Gold)
 
 		choice, err := strconv.Atoi(readInput())
 		if err != nil || choice < 0 || choice > len(items) {
@@ -74,9 +73,13 @@ func upgradeInventorySlot(p *Character) bool {
 	return true
 }
 
-func merchantDisplay(items []Item) {
+func merchantDisplay(items []Item, gold int) {
 	for i, it := range items {
-		fmt.Printf("%d. %-30s (%d or)\n", i+1, it.Name, it.Price)
+		line := fmt.Sprintf("%d. %-30s (%d or)", i+1, it.Name, it.Price)
+		if it.Price > gold {
+			line = "\x1b[90m" + line + "\x1b[0m"
+		}
+		fmt.Println(line)
 	}
 	fmt.Println("0. Retour")
 }
