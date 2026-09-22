@@ -216,6 +216,78 @@ func enemySkills(m *Monster) []MonsterSkill {
 	return m.Skills
 }
 
+func predictMonsterSkillName(m *Monster, turn int) string {
+	switch m.Name {
+	case MonstreVer:
+		return "Morsure"
+
+	case MonstreSanglier:
+		if turn%3 == 0 {
+			return "Charge"
+		}
+		return "Attaque"
+
+	case MonstreLoupGarou:
+		if !m.HowlUsed && turn == 3 {
+			return "Hurlement"
+		}
+		if turn%2 == 0 {
+			return "Griffure enragée"
+		}
+		return "Attaque"
+
+	case MonstreDragonAncien:
+		switch m.CurrentPhase {
+		case 0:
+			if turn%2 == 0 {
+				return "Souffle ardent"
+			}
+			return "Griffe"
+		case 1:
+			if turn%3 == 0 {
+				return "Étreinte liquide"
+			}
+			return "Raz-de-marée"
+		case 2:
+			if turn%4 == 0 {
+				return "Dissolution"
+			}
+			return "Frappe hors du plan"
+		case 3:
+			element := ElementFeu
+			switch turn % 3 {
+			case 1:
+				element = ElementEau
+			case 2:
+				element = ElementSpectre
+			}
+			return "Convergence élémentaire (" + string(element) + ")"
+		}
+	}
+	return "Attaque"
+}
+
+func findSkill(skills []MonsterSkill, name string) MonsterSkill {
+	for _, s := range skills {
+		if s.Name == name || strings.HasPrefix(name, s.Name+" (") {
+			return s
+		}
+	}
+	return MonsterSkill{
+		Name: "Attaque", Kind: SkillAttack, DamagePct: 100,
+		Description: "Attaque simple (100% ATK).",
+	}
+}
+
+func enemyIntentText(m *Monster, turn int) string {
+	if m.SkipNextTurn {
+		return "Intention : Étourdi — ne peut pas agir"
+	}
+	name := predictMonsterSkillName(m, turn)
+	skill := findSkill(enemySkills(m), name)
+	return fmt.Sprintf("Intention : %s %s", skillIcon(skill.Kind), name)
+}
+
 func skillIcon(k SkillKind) string {
 	switch k {
 	case SkillAttack:
@@ -295,8 +367,12 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
 		fmt.Sprintf("ATK %d", m.Attack),
 	}
-	if status := statusLine(m.Shield, m.Effects, false, 0, m.Intangible, m.SkipNextTurn); status != "" {
+		if status := statusLine(m.Shield, m.Effects, false, 0, m.Intangible, m.SkipNextTurn); status != "" {
 		enemyInfoLines = append(enemyInfoLines, status)
+	}
+	if intent := enemyIntentText(m, turn); intent != "" {
+		enemyInfoLines = append(enemyInfoLines,
+			"\x1b[38;2;220;170;60m"+truncateVisible(intent, creatureArtWidth)+"\x1b[0m")
 	}
 	if hint := vulnerabilityHint(m.Resistances); hint != "" {
 		enemyInfoLines = append(enemyInfoLines,
