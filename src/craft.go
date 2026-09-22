@@ -116,7 +116,7 @@ func craftMenu(p *Character) {
 	for {
 		clearScreen()
 		displayBanner(bannerForge)
-		fmt.Printf("\n=== Forgeron === (Or : %d)\n", p.Gold)
+		fmt.Printf("\n(Or : %d)\n", p.Gold)
 		craftDisplay(list)
 		fmt.Print("Votre choix : ")
 

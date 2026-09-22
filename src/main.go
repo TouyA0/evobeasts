@@ -19,9 +19,10 @@ func main() {
 func mainMenu(p *Character) {
 	for {
 		clearScreen()
+		displayBanner(bannerMenu)
  
 		lines := []string{
-			"\x1b[38;2;100;220;120mEvoBeasts — " + p.Name + " (" + string(p.Species.Element) + ")\x1b[0m",
+			"\x1b[38;2;100;220;120m" + p.Name + " (" + string(p.Species.Element) + ")\x1b[0m",
 			fmt.Sprintf("Niveau %d   PV %s   Mana %s   Or %d",
 				p.Level,
 				healthBar(p.CurrentHP, p.MaxHP, 12, nil),
