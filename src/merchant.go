@@ -8,15 +8,20 @@ import (
 
 func merchantCatalog() []Item {
 	return []Item{
-		{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50},
-		{Name: PotionPoison, Type: ItemPotion, Price: 6, PoisonDamage: 10, PoisonTicks: 3},
-		{Name: PotionMana, Type: ItemPotion, Price: 5, ManaValue: 30},
-		{Name: GrimoireSoufle, Type: ItemSpellbook, Price: 25, SpellName: SortSoufflePrimordial},
+		{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50,
+			Description: "Soigne 50 PV instantanément"},
+		{Name: PotionPoison, Type: ItemPotion, Price: 6, PoisonDamage: 10, PoisonTicks: 3,
+			Description: "Inflige 10 dégâts de poison sur 3 tours"},
+		{Name: PotionMana, Type: ItemPotion, Price: 5, ManaValue: 30,
+			Description: "Restaure 30 points de mana"},
+		{Name: GrimoireSoufle, Type: ItemSpellbook, Price: 25, SpellName: SortSoufflePrimordial,
+			Description: "Enseigne le sort Souffle primordial"},
 		{Name: ResEcaille, Type: ItemResource, Price: 4},
 		{Name: ResAbyssal, Type: ItemResource, Price: 7},
 		{Name: ResSpectre, Type: ItemResource, Price: 3},
 		{Name: ResPlume, Type: ItemResource, Price: 1},
-		{Name: ExpansionSac, Type: ItemUpgrade, Price: 30},
+		{Name: ExpansionSac, Type: ItemUpgrade, Price: 30,
+			Description: "+10 emplacements d'inventaire"},
 	}
 }
 
@@ -80,6 +85,9 @@ func merchantDisplay(items []Item, gold int) {
 			line = "\x1b[90m" + line + "\x1b[0m"
 		}
 		fmt.Println(line)
+		if it.Description != "" {
+			fmt.Printf("   \x1b[3;90m%s\x1b[0m\n", it.Description)
+		}
 	}
 	fmt.Println("0. Retour")
 }

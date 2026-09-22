@@ -146,6 +146,7 @@ type Item struct {
 	Name  string
 	Type  ItemType
 	Price int // prix chez le marchand, 0 si non vendu
+	Description string
  
 	// Potions
 	HealValue    int // PV rendus
