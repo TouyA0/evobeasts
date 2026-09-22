@@ -93,9 +93,14 @@ func craftItem(p *Character, r Recipe) bool {
 	return true
 }
 
-func craftDisplay(recipeList []Recipe) {
+func craftDisplay(recipeList []Recipe, p *Character) {
 	for i, recipe := range recipeList {
-		fmt.Printf("%d. %s (%d or)\n", i+1, recipe.Result.Name, recipe.GoldCost)
+		ok, _ := canCraft(p, recipe)
+		titleLine := fmt.Sprintf("%d. %s (%d or)", i+1, recipe.Result.Name, recipe.GoldCost)
+		if !ok {
+			titleLine = "\x1b[90m" + titleLine + "\x1b[0m"
+		}
+		fmt.Println(titleLine)
 
 		names := make([]string, 0, len(recipe.Materials))
 		for resource := range recipe.Materials {
@@ -104,7 +109,12 @@ func craftDisplay(recipeList []Recipe) {
 		sort.Strings(names)
 
 		for _, resource := range names {
-			fmt.Printf("   - %d %s\n", recipe.Materials[resource], resource)
+			needed := recipe.Materials[resource]
+			line := fmt.Sprintf("   - %d %s", needed, resource)
+			if countItem(p, resource) < needed {
+				line = "\x1b[91m" + line + "\x1b[0m"
+			}
+			fmt.Println(line)
 		}
 		fmt.Println()
 	}
@@ -119,7 +129,7 @@ func craftMenu(p *Character) {
 		displayBanner(bannerForge)
 		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
 		fmt.Println(strings.Repeat("─", 30))
-		craftDisplay(list)
+		craftDisplay(list, p)
 		fmt.Print("Votre choix : ")
 
 		choice := readInput()
