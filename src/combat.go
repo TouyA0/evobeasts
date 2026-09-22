@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -161,15 +162,23 @@ func runCharacterTurn(p *Character, m *Monster) {
     }
 
     message := ""
-    fmt.Print("\033[s")
+    linesPrinted := 0
 
     for {
-        fmt.Print("\033[u\033[0J")
-        fmt.Println("\n1. Attaquer   2. Sorts   3. Inventaire")
-        if message != "" {
-            fmt.Println(message)
+        if linesPrinted > 0 {
+            fmt.Printf("\033[%dA\033[0J", linesPrinted)
         }
+
+        var b strings.Builder
+        b.WriteString("\n1. Attaquer   2. Sorts   3. Inventaire\n")
+        if message != "" {
+            b.WriteString(message + "\n")
+        }
+        text := b.String()
+        fmt.Print(text)
         fmt.Print("Votre choix : ")
+        linesPrinted = strings.Count(text, "\n") + 1
+
         choice := readInput()
 
         switch choice {
@@ -183,6 +192,7 @@ func runCharacterTurn(p *Character, m *Monster) {
                 return
             }
             message = msg
+            linesPrinted = 0
 
         case "3":
             used, msg := combatInventoryMenu(p, m)
@@ -190,9 +200,10 @@ func runCharacterTurn(p *Character, m *Monster) {
                 return
             }
             message = msg
+            linesPrinted = 0
 
         default:
-            message = "⚠ Choix invalide. Veuillez entrer un nombre entre 1 et 3."
+            message = "Choix invalide. Veuillez entrer un nombre entre 1 et 3."
         }
     }
 }
@@ -242,10 +253,15 @@ func spellMenu(p *Character, m *Monster) (bool, string) {
 	}
 
 	message := ""
+	linesPrinted := 0
 
 	for {
-		fmt.Print("\033[u\033[0J")
-		fmt.Println("Sorts :")
+		if linesPrinted > 0 {
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		}
+
+		var b strings.Builder
+		b.WriteString("Sorts :\n")
 		for i, s := range castable {
 			tag := ""
 			if s.Element != p.Species.Element {
@@ -257,21 +273,25 @@ func spellMenu(p *Character, m *Monster) (bool, string) {
 
 			ok, reason := canCastSpell(p, s)
 			if ok {
-				fmt.Printf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost)
+				b.WriteString(fmt.Sprintf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost))
 			} else {
-				fmt.Printf("\x1b[38;2;220;70;70m%d. %s %s%s (%d mana) — %s\x1b[0m\n",
-					i+1, spellIcon(s), s.Name, tag, s.ManaCost, reason)
+				b.WriteString(fmt.Sprintf("\x1b[38;2;220;70;70m%d. %s %s%s (%d mana) — %s\x1b[0m\n",
+					i+1, spellIcon(s), s.Name, tag, s.ManaCost, reason))
 			}
-			fmt.Printf("   %s\n", s.Description)
+			b.WriteString(fmt.Sprintf("   %s\n", s.Description))
 		}
-		fmt.Println("0. Retour")
+		b.WriteString("0. Retour\n")
 		if message != "" {
-			fmt.Println(message)
+			b.WriteString(message + "\n")
 		}
+		text := b.String()
+		fmt.Print(text)
 		fmt.Print("Votre choix : ")
+		linesPrinted = strings.Count(text, "\n") + 1
 
 		choice := readInput()
 		if choice == "0" {
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
 			return false, ""
 		}
 		idx, err := strconv.Atoi(choice)
@@ -308,20 +328,29 @@ func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 
 	var idx int
 	message := ""
+	linesPrinted := 0
 	for {
-		fmt.Print("\033[u\033[0J")
-		fmt.Println("Inventaire :")
+		if linesPrinted > 0 {
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		}
+
+		var b strings.Builder
+		b.WriteString("Inventaire :\n")
 		for i, item := range p.Inventory {
-			fmt.Printf("%d. %s\n", i+1, item.Name)
+			b.WriteString(fmt.Sprintf("%d. %s\n", i+1, item.Name))
 		}
-		fmt.Println("0. Retour")
+		b.WriteString("0. Retour\n")
 		if message != "" {
-			fmt.Println(message)
+			b.WriteString(message + "\n")
 		}
+		text := b.String()
+		fmt.Print(text)
 		fmt.Print("Votre choix : ")
+		linesPrinted = strings.Count(text, "\n") + 1
 
 		choice := readInput()
 		if choice == "0" {
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
 			return false, ""
 		}
 		i, err := strconv.Atoi(choice)
