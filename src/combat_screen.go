@@ -376,6 +376,21 @@ func hasCastableUltimate(p *Character) bool {
 	return false
 }
 
+func tierLabel(tier int) string {
+	switch tier {
+	case 1:
+		return "Novice"
+	case 2:
+		return "Intermédiaire"
+	case 3:
+		return "Avancé"
+	case 4:
+		return "Boss"
+	default:
+		return ""
+	}
+}
+
 func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 	clearScreen()
 
@@ -392,6 +407,7 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 	if len(m.Phases) > 0 {
 		enemyHeaderText = fmt.Sprintf("%s (%s)", m.Name, m.Phases[m.CurrentPhase].Name)
 	}
+	enemyHeaderText += fmt.Sprintf(" · Tier %d (%s)", m.Tier, tierLabel(m.Tier))
 	if m.Element != ElementNeutre {
 		enemyHeaderText += " · " + string(m.Element)
 	}
