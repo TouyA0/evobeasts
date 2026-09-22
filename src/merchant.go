@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 func merchantCatalog() []Item {
@@ -44,7 +45,9 @@ func merchantMenu(p *Character) {
 	for {
 		clearScreen()
 		displayBanner(bannerMerchant)
-		fmt.Printf("\n(Or : %d)\n", p.Gold)
+		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
+		fmt.Println(strings.Repeat("─", 30))
+		merchantDisplay(items)
 		merchantDisplay(items)
 
 		choice, err := strconv.Atoi(readInput())
@@ -73,7 +76,7 @@ func upgradeInventorySlot(p *Character) bool {
 
 func merchantDisplay(items []Item) {
 	for i, it := range items {
-		fmt.Printf("%d. %s (%d or)\n", i+1, it.Name, it.Price)
+		fmt.Printf("%d. %-30s (%d or)\n", i+1, it.Name, it.Price)
 	}
 	fmt.Println("0. Retour")
 }
