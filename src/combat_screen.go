@@ -219,6 +219,14 @@ func resistanceLines(res map[Element]float64) (weakLine, strongLine string) {
 	return
 }
 
+func initiativeLine(base int, effects []StatusEffect) string {
+	eff := effectiveInitiative(base, effects)
+	if eff != base {
+		return fmt.Sprintf("INIT %d (base %d)", eff, base)
+	}
+	return fmt.Sprintf("INIT %d", eff)
+}
+
 func enemySkills(m *Monster) []MonsterSkill {
 	if len(m.Phases) > 0 {
 		return m.Phases[m.CurrentPhase].Attacks
@@ -372,10 +380,11 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 		playerArt, _ = renderImageString(imgPath, creatureArtWidth)
 	}
  
-		// --- Bloc d'infos ennemi (gauche) : PV, ATK, vulnérabilité, phase, compétences ---
+	// --- Bloc d'infos ennemi (gauche) : PV, ATK, vulnérabilité, phase, compétences ---
 	enemyInfoLines := []string{
 		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
 		fmt.Sprintf("ATK %d", m.Attack),
+		initiativeLine(m.Initiative, m.Effects),
 	}
 		if status := statusLine(m.Shield, m.Effects, false, 0, m.Intangible, m.SkipNextTurn); status != "" {
 		enemyInfoLines = append(enemyInfoLines, status)
@@ -412,6 +421,7 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
 		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
 		fmt.Sprintf("ATK %d", p.Attack),
+		initiativeLine(p.Initiative, p.Effects),
 	}
 	if p.DodgeRate > 0 {
 		playerInfoLines = append(playerInfoLines, fmt.Sprintf("Esquive %d%%", p.DodgeRate))
