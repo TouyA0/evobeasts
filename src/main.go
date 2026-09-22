@@ -31,6 +31,7 @@ func mainMenu(p *Character) {
 		fmt.Print("Votre choix : ")
 
 		choice := readInput()
+		clearScreen()
 
 		switch choice {
 		case "1":
