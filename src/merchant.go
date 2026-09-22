@@ -54,6 +54,7 @@ func merchantMenu(p *Character) {
 		fmt.Println(strings.Repeat("─", 30))
 		merchantDisplay(items, p.Gold, p)
 
+		fmt.Print("Votre choix : ")
 		choice, err := strconv.Atoi(readInput())
 		if err != nil || choice < 0 || choice > len(items) {
 			fmt.Println("Choix invalide.")
