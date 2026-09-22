@@ -196,17 +196,27 @@ func boxify(lines []string) string {
 	return b.String()
 }
 
-func vulnerabilityHint(res map[Element]float64) string {
-	var weak []string
+func resistanceLines(res map[Element]float64) (weakLine, strongLine string) {
+	var weak, strong []string
 	for _, e := range []Element{ElementFeu, ElementEau, ElementSpectre} {
-		if v, ok := res[e]; ok && v > 1.0 {
-			weak = append(weak, string(e))
+		v, ok := res[e]
+		if !ok || v == 1.0 {
+			continue
+		}
+		tag := fmt.Sprintf("%s x%.1f", e, v)
+		if v > 1.0 {
+			weak = append(weak, tag)
+		} else {
+			strong = append(strong, tag)
 		}
 	}
-	if len(weak) == 0 {
-		return ""
+	if len(weak) > 0 {
+		weakLine = "Faible: " + strings.Join(weak, ", ")
 	}
-	return "Vulnérable: " + strings.Join(weak, "/")
+	if len(strong) > 0 {
+		strongLine = "Résiste: " + strings.Join(strong, ", ")
+	}
+	return
 }
 
 func enemySkills(m *Monster) []MonsterSkill {
@@ -374,9 +384,15 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 		enemyInfoLines = append(enemyInfoLines,
 			"\x1b[38;2;220;170;60m"+truncateVisible(intent, creatureArtWidth)+"\x1b[0m")
 	}
-	if hint := vulnerabilityHint(m.Resistances); hint != "" {
-		enemyInfoLines = append(enemyInfoLines,
-			"\x1b[38;2;140;170;220m"+truncateVisible(hint, creatureArtWidth)+"\x1b[0m")
+	if weakLine, strongLine := resistanceLines(m.Resistances); weakLine != "" || strongLine != "" {
+		if weakLine != "" {
+			enemyInfoLines = append(enemyInfoLines,
+				"\x1b[38;2;220;90;90m"+truncateVisible(weakLine, creatureArtWidth)+"\x1b[0m")
+		}
+		if strongLine != "" {
+			enemyInfoLines = append(enemyInfoLines,
+				"\x1b[38;2;140;170;220m"+truncateVisible(strongLine, creatureArtWidth)+"\x1b[0m")
+		}
 	}
 	if hint := nextPhaseHint(m); hint != "" {
 		enemyInfoLines = append(enemyInfoLines,
