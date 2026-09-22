@@ -61,7 +61,7 @@ func mainMenu(p *Character) {
 			fmt.Println("À bientôt !")
 			return
 		default:
-			fmt.Println("Choix invalide.")
+			fmt.Println("Choix invalide. Veuillez entrer un chiffre entre 1 et 7.")
 		}
 
 		pauseForInput()
