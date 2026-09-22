@@ -71,33 +71,38 @@ func itemDescription(item Item) string {
 }
 
 func accessInventory(character *Character) {
-	if len(character.Inventory) == 0 {
-		fmt.Println("Inventaire vide.")
-		return
-	}
-
-	fmt.Println("Inventaire :")
-	for i, item := range character.Inventory {
-		if desc := itemDescription(item); desc != "" {
-			fmt.Printf("%d. %s — %s\n", i+1, item.Name, desc)
-		} else {
-			fmt.Printf("%d. %s\n", i+1, item.Name)
+	for {
+		if len(character.Inventory) == 0 {
+			fmt.Println("Inventaire vide.")
+			return
 		}
-	}
-	fmt.Println("0. Retour")
-	fmt.Print("Votre choix : ")
 
-	choice := readInput()
-	if choice == "0" {
-		return
-	}
-	idx, err := strconv.Atoi(choice)
-	if err != nil || idx < 1 || idx > len(character.Inventory) {
-		fmt.Println("Choix invalide.")
-		return
-	}
+		clearScreen()
+		fmt.Println("Inventaire :")
+		for i, item := range character.Inventory {
+			if desc := itemDescription(item); desc != "" {
+				fmt.Printf("%d. %s — %s\n", i+1, item.Name, desc)
+			} else {
+				fmt.Printf("%d. %s\n", i+1, item.Name)
+			}
+		}
+		fmt.Println("0. Retour")
+		fmt.Print("Votre choix : ")
 
-	useItem(character, character.Inventory[idx-1])
+		choice := readInput()
+		if choice == "0" {
+			return
+		}
+		idx, err := strconv.Atoi(choice)
+		if err != nil || idx < 1 || idx > len(character.Inventory) {
+			fmt.Println("Choix invalide.")
+			pauseForInput()
+			continue
+		}
+
+		useItem(character, character.Inventory[idx-1])
+		pauseForInput()
+	}
 }
 
 func useItem(p *Character, item Item) {
