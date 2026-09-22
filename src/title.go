@@ -3,7 +3,7 @@ package main
 import "fmt"
  
 const titleImagePath = "assets/title.png"
-const titleWidth = 180
+const titleWidth = 120
 
 func displayTitleScreen() {
 	if !displayImage(titleImagePath, titleWidth) {
