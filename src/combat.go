@@ -187,20 +187,22 @@ func runCharacterTurn(p *Character, m *Monster) {
             return
 
         case "2":
+            fmt.Printf("\033[%dA\033[0J", linesPrinted)
+            linesPrinted = 0
             used, msg := spellMenu(p, m)
             if used {
                 return
             }
             message = msg
-            linesPrinted = 0
 
         case "3":
+            fmt.Printf("\033[%dA\033[0J", linesPrinted)
+            linesPrinted = 0
             used, msg := combatInventoryMenu(p, m)
             if used {
                 return
             }
             message = msg
-            linesPrinted = 0
 
         default:
             message = "Choix invalide. Veuillez entrer un nombre entre 1 et 3."
