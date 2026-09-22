@@ -146,11 +146,8 @@ func runCharacterTurn(p *Character, m *Monster) {
 			if combatInventoryMenu(p, m) {
 				return
 			}
-		case "":
-			fmt.Println("Veuillez entrer un numéro.")
 		default:
-			fmt.Println("Choix invalide, tour passé.")
-			return
+			fmt.Println("Choix invalide.")
 		}
 	}
 }
@@ -224,14 +221,10 @@ func spellMenu(p *Character, m *Monster) bool {
 		if choice == "0" {
 			return false
 		}
-		if choice == "" {
-			fmt.Println("Veuillez entrer un numéro.")
-			continue
-		}
 		idx, err := strconv.Atoi(choice)
 		if err != nil || idx < 1 || idx > len(castable) {
-			fmt.Println("Choix invalide, tour passé.")
-			return true
+			fmt.Println("Choix invalide.")
+			continue
 		}
  
 		spell := castable[idx-1]
@@ -271,14 +264,10 @@ func combatInventoryMenu(p *Character, m *Monster) bool {
 		if choice == "0" {
 			return false
 		}
-		if choice == "" {
-			fmt.Println("Veuillez entrer un numéro.")
-			continue
-		}
 		i, err := strconv.Atoi(choice)
 		if err != nil || i < 1 || i > len(p.Inventory) {
-			fmt.Println("Choix invalide, tour passé.")
-			return true
+			fmt.Println("Choix invalide.")
+			continue
 		}
 		idx = i
 		break
