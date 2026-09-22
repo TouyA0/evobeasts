@@ -43,6 +43,7 @@ func merchantMenu(p *Character) {
 
 	for {
 		clearScreen()
+		displayBanner(bannerMerchant)
 		fmt.Printf("\n=== Marchand === (Or : %d)\n", p.Gold)
 		merchantDisplay(items)
 

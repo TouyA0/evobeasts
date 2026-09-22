@@ -214,6 +214,10 @@ func spellMenu(p *Character, m *Monster) {
 		if choice == "0" {
 			return
 		}
+		if choice == "" {
+			fmt.Println("Veuillez entrer un numéro.")
+			continue
+		}
 		idx, err := strconv.Atoi(choice)
 		if err != nil || idx < 1 || idx > len(castable) {
 			fmt.Println("Choix invalide, tour passé.")
@@ -244,19 +248,30 @@ func combatInventoryMenu(p *Character, m *Monster) {
 		fmt.Println("Inventaire vide.")
 		return
 	}
-	for i, item := range p.Inventory {
-		fmt.Printf("%d. %s\n", i+1, item.Name)
-	}
-	fmt.Println("0. Retour")
-	fmt.Print("Votre choix : ")
-	choice := readInput()
-	if choice == "0" {
-		return
-	}
-	idx, err := strconv.Atoi(choice)
-	if err != nil || idx < 1 || idx > len(p.Inventory) {
-		fmt.Println("Choix invalide, tour passé.")
-		return
+ 
+	var idx int
+	for {
+		for i, item := range p.Inventory {
+			fmt.Printf("%d. %s\n", i+1, item.Name)
+		}
+		fmt.Println("0. Retour")
+		fmt.Print("Votre choix : ")
+ 
+		choice := readInput()
+		if choice == "0" {
+			return
+		}
+		if choice == "" {
+			fmt.Println("Veuillez entrer un numéro.")
+			continue
+		}
+		i, err := strconv.Atoi(choice)
+		if err != nil || i < 1 || i > len(p.Inventory) {
+			fmt.Println("Choix invalide, tour passé.")
+			return
+		}
+		idx = i
+		break
 	}
  
 	item := p.Inventory[idx-1]
