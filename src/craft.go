@@ -102,6 +102,17 @@ func craftDisplay(recipeList []Recipe, p *Character) {
 		}
 		fmt.Println(titleLine)
 
+		bonuses := []string{}
+		if recipe.Result.BonusMaxHP > 0 {
+			bonuses = append(bonuses, fmt.Sprintf("+%d PV", recipe.Result.BonusMaxHP))
+		}
+		if recipe.Result.BonusMaxMana > 0 {
+			bonuses = append(bonuses, fmt.Sprintf("+%d Mana", recipe.Result.BonusMaxMana))
+		}
+		if len(bonuses) > 0 {
+			fmt.Printf("   \x1b[36m%s\x1b[0m\n", strings.Join(bonuses, ", "))
+		}
+
 		names := make([]string, 0, len(recipe.Materials))
 		for resource := range recipe.Materials {
 			names = append(names, resource)
