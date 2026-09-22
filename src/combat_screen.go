@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+	"os"
+	"os/exec"
+	"runtime"
 )
 
 const (
@@ -12,7 +15,17 @@ const (
 )
 
 func clearScreen() {
-	fmt.Print("\x1b[2J\x1b[H")
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
 
 var ansiEscape = regexp.MustCompile("\x1b\\[[0-9;]*m") // ignore les codes couleurs ANSI
