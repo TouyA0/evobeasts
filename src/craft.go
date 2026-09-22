@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func recipes() []Recipe {
@@ -116,7 +117,8 @@ func craftMenu(p *Character) {
 	for {
 		clearScreen()
 		displayBanner(bannerForge)
-		fmt.Printf("\n(Or : %d)\n", p.Gold)
+		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
+		fmt.Println(strings.Repeat("─", 30))
 		craftDisplay(list)
 		fmt.Print("Votre choix : ")
 
