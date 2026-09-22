@@ -154,33 +154,47 @@ func checkPlayerDefeat(p *Character) bool {
 }
 
 func runCharacterTurn(p *Character, m *Monster) {
-	if p.SkipNextTurn {
-		fmt.Println(p.Name + " ne peut pas agir ce tour-ci.")
-		p.SkipNextTurn = false
-		return
-	}
- 
-	for {
-		fmt.Println("\n1. Attaquer   2. Sorts   3. Inventaire")
-		fmt.Print("Votre choix : ")
-		choice := readInput()
- 
-		switch choice {
-		case "1":
-			basicAttack(p, m)
-			return
-		case "2":
-			if spellMenu(p, m) {
-				return
-			}
-		case "3":
-			if combatInventoryMenu(p, m) {
-				return
-			}
-		default:
-			fmt.Println("Choix invalide.")
-		}
-	}
+    if p.SkipNextTurn {
+        fmt.Println(p.Name + " ne peut pas agir ce tour-ci.")
+        p.SkipNextTurn = false
+        return
+    }
+
+    message := ""
+    fmt.Print("\033[s")
+
+    for {
+        fmt.Print("\033[u\033[0J")
+        fmt.Println("\n1. Attaquer   2. Sorts   3. Inventaire")
+        if message != "" {
+            fmt.Println(message)
+        }
+        fmt.Print("Votre choix : ")
+        choice := readInput()
+
+        switch choice {
+        case "1":
+            basicAttack(p, m)
+            return
+
+        case "2":
+            used, msg := spellMenu(p, m)
+            if used {
+                return
+            }
+            message = msg
+
+        case "3":
+            used, msg := combatInventoryMenu(p, m)
+            if used {
+                return
+            }
+            message = msg
+
+        default:
+            message = "⚠ Choix invalide. Veuillez entrer un nombre entre 1 et 3."
+        }
+    }
 }
 
 func basicAttack(p *Character, m *Monster) {
@@ -215,20 +229,23 @@ func spellIcon(s Spell) string {
 	}
 }
 
-func spellMenu(p *Character, m *Monster) bool {
+func spellMenu(p *Character, m *Monster) (bool, string) {
 	castable := make([]Spell, 0, len(p.Spells))
 	for _, s := range p.Spells {
 		if s.Name != SortRenaissance {
 			castable = append(castable, s)
 		}
 	}
- 
+
 	if len(castable) == 0 {
-		fmt.Println("Aucun sort connu.")
-		return false
+		return false, "Aucun sort connu."
 	}
- 
+
+	message := ""
+
 	for {
+		fmt.Print("\033[u\033[0J")
+		fmt.Println("Sorts :")
 		for i, s := range castable {
 			tag := ""
 			if s.Element != p.Species.Element {
@@ -237,7 +254,7 @@ func spellMenu(p *Character, m *Monster) bool {
 			if s.IsUltimate {
 				tag += " (ULTIME)"
 			}
- 
+
 			ok, reason := canCastSpell(p, s)
 			if ok {
 				fmt.Printf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost)
@@ -248,70 +265,77 @@ func spellMenu(p *Character, m *Monster) bool {
 			fmt.Printf("   %s\n", s.Description)
 		}
 		fmt.Println("0. Retour")
+		if message != "" {
+			fmt.Println(message)
+		}
 		fmt.Print("Votre choix : ")
- 
+
 		choice := readInput()
 		if choice == "0" {
-			return false
+			return false, ""
 		}
 		idx, err := strconv.Atoi(choice)
 		if err != nil || idx < 1 || idx > len(castable) {
-			fmt.Println("Choix invalide.")
+			message = "Choix invalide."
 			continue
 		}
- 
+
 		spell := castable[idx-1]
 		if ok, reason := canCastSpell(p, spell); !ok {
-			fmt.Println("Sort inutilisable : " + reason)
+			message = "Sort inutilisable : " + reason
 			continue
 		}
- 
-		message, ok := castSpell(p, m, spell)
-		fmt.Println(message)
+
+		result, ok := castSpell(p, m, spell)
 		if !ok {
-			fmt.Println(message)
+			message = result
 			continue
 		}
 		if m != nil {
-			printSequential(message, fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP))
+			printSequential(result, fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP))
 		} else {
-			fmt.Println(message)
+			fmt.Println(result)
 		}
 		announcePhaseChange(m)
-		return true
+		return true, ""
 	}
 }
 
-func combatInventoryMenu(p *Character, m *Monster) bool {
+func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 	if len(p.Inventory) == 0 {
-		fmt.Println("Inventaire vide.")
-		return false
+		return false, "Inventaire vide."
 	}
- 
+
 	var idx int
+	message := ""
 	for {
+		fmt.Print("\033[u\033[0J")
+		fmt.Println("Inventaire :")
 		for i, item := range p.Inventory {
 			fmt.Printf("%d. %s\n", i+1, item.Name)
 		}
 		fmt.Println("0. Retour")
+		if message != "" {
+			fmt.Println(message)
+		}
 		fmt.Print("Votre choix : ")
- 
+
 		choice := readInput()
 		if choice == "0" {
-			return false
+			return false, ""
 		}
 		i, err := strconv.Atoi(choice)
 		if err != nil || i < 1 || i > len(p.Inventory) {
-			fmt.Println("Choix invalide.")
+			message = "Choix invalide."
 			continue
 		}
 		idx = i
 		break
 	}
- 
+
 	item := p.Inventory[idx-1]
 	fmt.Println("Vous utilisez " + item.Name)
- 
+
 	switch {
 	case item.HealValue > 0:
 		p.CurrentHP += item.HealValue
@@ -332,9 +356,9 @@ func combatInventoryMenu(p *Character, m *Monster) bool {
 		})
 		fmt.Println(item.Name + " est jetée sur " + m.Name + " !")
 	}
- 
+
 	removeInventory(p, item.Name)
-	return true
+	return true, ""
 }
 
 func announcePhaseChange(m *Monster) {
