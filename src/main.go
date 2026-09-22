@@ -20,16 +20,25 @@ func main() {
 func mainMenu(p *Character) {
 	for {
 		clearScreen()
-		fmt.Println("\n--- Menu principal ---")
-		fmt.Println("1. Afficher les informations du personnage")
-		fmt.Println("2. Accéder à l'inventaire")
-		fmt.Println("3. Marchand")
-		fmt.Println("4. Forgeron")
-		fmt.Println("5. Combat")
-		fmt.Println("6. Qui sont-ils ?")
-		fmt.Println("7. Quitter")
+ 
+		lines := []string{
+			"\x1b[38;2;100;220;120mEvoBeasts — " + p.Name + " (" + string(p.Species.Element) + ")\x1b[0m",
+			fmt.Sprintf("PV %s   Mana %s   Or %d",
+				healthBar(p.CurrentHP, p.MaxHP, 12),
+				healthBar(p.CurrentMana, p.MaxMana, 12),
+				p.Gold),
+			"",
+			"1. Informations du personnage",
+			"2. Inventaire",
+			"3. Marchand",
+			"4. Forgeron",
+			"5. Combat",
+			"6. Qui sont-ils ?",
+			"7. Quitter",
+		}
+		fmt.Print(boxify(lines))
 		fmt.Print("Votre choix : ")
-
+ 
 		choice := readInput()
 		clearScreen()
 
