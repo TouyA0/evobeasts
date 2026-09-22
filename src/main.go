@@ -23,7 +23,8 @@ func mainMenu(p *Character) {
  
 		lines := []string{
 			"\x1b[38;2;100;220;120mEvoBeasts — " + p.Name + " (" + string(p.Species.Element) + ")\x1b[0m",
-			fmt.Sprintf("PV %s   Mana %s   Or %d",
+			fmt.Sprintf("Niveau %d   PV %s   Mana %s   Or %d",
+				p.Level,
 				healthBar(p.CurrentHP, p.MaxHP, 12),
 				healthBar(p.CurrentMana, p.MaxMana, 12),
 				p.Gold),
