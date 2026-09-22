@@ -136,33 +136,43 @@ func isDead(p *Character) bool {
 }
 
 func displayInfo(p *Character) {
-	fmt.Printf("Nom : %s\n", p.Name)
-	fmt.Printf("Espèce : %s (%s)\n", p.Species.Name, p.Species.Element)
-	fmt.Printf("Palier : %d — %s\n", p.Stage, currentStageName(p))
-	fmt.Printf("Niveau : %d (XP : %d/%d)\n", p.Level, p.Experience, p.MaxExperience)
-	fmt.Printf("PV   : %d/%d\n", p.CurrentHP, p.MaxHP)
-	fmt.Printf("Mana : %d/%d\n", p.CurrentMana, p.MaxMana)
-	fmt.Printf("Attaque : %d\n", p.Attack)
-	fmt.Printf("Or : %d\n", p.Gold)
-
-	fmt.Println("Équipement :")
-	equipmentDisplay(p.Equipment)
-
+	header := "\x1b[38;2;100;220;120m" + fmt.Sprintf("%s — %s (%s)", p.Name, currentStageName(p), p.Species.Element) + "\x1b[0m"
+ 
+	infoLines := []string{
+		header, "",
+		fmt.Sprintf("Niveau %d  (XP : %d/%d)", p.Level, p.Experience, p.MaxExperience),
+		"",
+		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
+		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
+		fmt.Sprintf("Attaque : %d", p.Attack),
+		fmt.Sprintf("Or : %d", p.Gold),
+		"",
+		"Équipement :",
+		"  Tête  : " + slotName(p.Equipment.Head),
+		"  Torse : " + slotName(p.Equipment.Chest),
+		"  Pieds : " + slotName(p.Equipment.Feet),
+	}
+ 
 	if len(p.Spells) > 0 {
-		fmt.Println("Sorts connus :")
+		infoLines = append(infoLines, "", "Sorts connus :")
 		for _, s := range p.Spells {
-			fmt.Printf("  - %s\n", s.Name)
+			icon := spellIcon(s)
+			infoLines = append(infoLines, fmt.Sprintf("  %s %s (%d mana)", icon, s.Name, s.ManaCost))
+			if s.Description != "" {
+				infoLines = append(infoLines, "     "+s.Description)
+			}
 		}
 	}
-
-	displayPlayerArt(p)
-}
-
-const infoArtWidth = 70
-func displayPlayerArt(p *Character) {
+ 
+	artStr := ""
 	if imgPath := speciesImagePath(p.Species.Name, p.Stage); imgPath != "" {
-		if rendered, ok := renderImageString(imgPath, infoArtWidth); ok {
-			fmt.Println(rendered)
-		}
+		artStr, _ = renderImageString(imgPath, infoArtWidth)
 	}
+ 
+	merged := dividedColumns(artStr, strings.Join(infoLines, "\n"), infoArtWidth)
+	lines := strings.Split(strings.TrimRight(merged, "\n"), "\n")
+ 
+	fmt.Print(boxify(lines))
 }
+
+const infoArtWidth = 40
