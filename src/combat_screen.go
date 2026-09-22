@@ -103,7 +103,7 @@ func dividedColumns(left, right string, leftWidth int) string {
 	return out.String()
 }
 
-func healthBar(current, max, width int) string {
+func healthBar(current, max, width int, thresholds []float64) string {
 	if max <= 0 {
 		max = 1
 	}
@@ -126,8 +126,41 @@ func healthBar(current, max, width int) string {
 		color = "\x1b[38;2;220;70;70m" // rouge
 	}
 
-	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
-	return color + "[" + bar + "]" + "\x1b[0m" + fmt.Sprintf(" %d/%d", current, max)
+	markerCol := make(map[int]bool)
+	for _, t := range thresholds {
+		col := int(t * float64(width))
+		if col > 0 && col < width {
+			markerCol[col] = true
+		}
+	}
+	const markerColor = "\x1b[38;2;190;150;230m" // violet, seuils de phase
+
+	var b strings.Builder
+	b.WriteString(color + "[")
+	for i := 0; i < width; i++ {
+		switch {
+		case markerCol[i]:
+			b.WriteString(markerColor + "┆" + color)
+		case i < filled:
+			b.WriteString("█")
+		default:
+			b.WriteString("░")
+		}
+	}
+	b.WriteString("]\x1b[0m")
+	b.WriteString(fmt.Sprintf(" %d/%d", current, max))
+	return b.String()
+}
+
+func phaseThresholds(m *Monster) []float64 {
+	if len(m.Phases) <= 1 {
+		return nil
+	}
+	var t []float64
+	for i := 1; i < len(m.Phases); i++ {
+		t = append(t, m.Phases[i].HPThreshold)
+	}
+	return t
 }
 
 func statusLine(shield int, effects []StatusEffect, invisible bool, invisibleBonus int, intangible bool, skipNextTurn bool) string {
@@ -382,7 +415,7 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
  
 	// --- Bloc d'infos ennemi (gauche) : PV, ATK, vulnérabilité, phase, compétences ---
 	enemyInfoLines := []string{
-		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20),
+		"PV   " + healthBar(m.CurrentHP, m.MaxHP, 20, phaseThresholds(m)),
 		fmt.Sprintf("ATK %d", m.Attack),
 		initiativeLine(m.Initiative, m.Effects),
 	}
@@ -418,8 +451,8 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 
 	// --- Bloc d'infos joueur (droite) ---
 	playerInfoLines := []string{
-		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20),
-		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20),
+		"PV   " + healthBar(p.CurrentHP, p.MaxHP, 20, nil),
+		"Mana " + healthBar(p.CurrentMana, p.MaxMana, 20, nil),
 		fmt.Sprintf("ATK %d", p.Attack),
 		initiativeLine(p.Initiative, p.Effects),
 	}
