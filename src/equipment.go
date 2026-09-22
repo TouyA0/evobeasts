@@ -1,35 +1,105 @@
-var AllArtefact = []Artefact{
-    ArtefactTete,
-    ArtefactTorse,
-    ArtefactPieds,
-}
-var ArtefactTete = Artefact{
-    Nom:         "Diadème des Origines",
-    Description: "Artéfact utilisable seulement sur la tête",
-    PVMax:       10,
-    ManaMax:     10,
+func equipItem(p *Character, item Item) bool {
+    if item.Type != ItemArtifact {
+        return false
+    }
+
+    switch item.Slot {
+    case SlotHead:
+        if p.Equipment.Head != nil {
+            p.Inventory = append(p.Inventory, *p.Equipment.Head)
+        }
+        p.Equipment.Head = &item
+
+    case SlotChest:
+        if p.Equipment.Chest != nil {
+            p.Inventory = append(p.Inventory, *p.Equipment.Chest)
+        }
+        p.Equipment.Chest = &item
+
+    case SlotFeet:
+        if p.Equipment.Feet != nil {
+            p.Inventory = append(p.Inventory, *p.Equipment.Feet)
+        }
+        p.Equipment.Feet = &item
+
+    default:
+        return false
+    }
+
+    recalculateStats(p)
+    return true
 }
 
-var ArtefactTorse = Artefact{
-    Nom:         "Carapace primordiale",
-    Description: "Artéfact utilisable seulement sur le torse",
-    PVMax:       25,
-    ManaMax:     0,
+func unequipItem(p *Character, slot EquipSlot) bool {
+    if len(p.Inventory) >= p.InventorySize {
+        return false
+    }
+
+    switch slot {
+    case SlotHead:
+        if p.Equipment.Head == nil {
+            return false
+        }
+        p.Inventory = append(p.Inventory, *p.Equipment.Head)
+        p.Equipment.Head = nil
+
+    case SlotChest:
+        if p.Equipment.Chest == nil {
+            return false
+        }
+        p.Inventory = append(p.Inventory, *p.Equipment.Chest)
+        p.Equipment.Chest = nil
+
+    case SlotFeet:
+        if p.Equipment.Feet == nil {
+            return false
+        }
+        p.Inventory = append(p.Inventory, *p.Equipment.Feet)
+        p.Equipment.Feet = nil
+
+    default:
+        return false
+    }
+
+    recalculateStats(p)
+    return true
 }
 
-var ArtefactPieds = Artefact{
-    Nom:         "Serres du Voile",
-    Description: "Artéfact utilisable seulement sur les pieds",
-    PVMax:       15,
-    ManaMax:     5,
+func equipmentBonus(e Equipment) (hp int, mana int) {
+    if e.Head != nil {
+        hp += e.Head.BonusMaxHP
+        mana += e.Head.BonusMaxMana
+    }
+
+    if e.Chest != nil {
+        hp += e.Chest.BonusMaxHP
+        mana += e.Chest.BonusMaxMana
+    }
+
+    if e.Feet != nil {
+        hp += e.Feet.BonusMaxHP
+        mana += e.Feet.BonusMaxMana
+    }
+
+    return hp, mana
 }
 
+func equipmentDisplay(e Equipment) {
+    if e.Head != nil {
+        fmt.Println("Tête :", e.Head.Name)
+    } else {
+        fmt.Println("Tête : vide")
+    }
 
+    if e.Chest != nil {
+        fmt.Println("Torse :", e.Chest.Name)
+    } else {
+        fmt.Println("Torse : vide")
+    }
 
-	func equipmentDisplay(e Equipment) {
-    var AllArtefact = []Artefact{
-    ArtefactTete,
-    ArtefactTorse,
-    ArtefactPieds,
-}
+    if e.Feet != nil {
+        fmt.Println("Pieds :", e.Feet.Name)
+    } else {
+        fmt.Println("Pieds : vide")
+    }
 }
