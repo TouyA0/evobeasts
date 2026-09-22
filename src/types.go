@@ -60,6 +60,7 @@ const (
 	GainManaNiveau    = 3   // mana max gagné par niveau
 	GainAtkNiveau     = 1   // attaque gagnée par niveau
 	CoutCraft         = 5   // or dépensé par fabrication
+	PermanentEffectDuration = 9999 // pour un effet qui dure tout le combat
 )
 
 // ÉLÉMENTS
@@ -243,6 +244,7 @@ type Phase struct {
 	Element     Element
 	Resistances map[Element]float64 // multiplicateur de dégâts reçus
 	DamageBonus int                 // % de dégâts bonus (phase finale)
+	Attacks     []string
 }
 
 type Monster struct {
@@ -253,6 +255,7 @@ type Monster struct {
 	Attack     int
 	Initiative int
 	Element    Element
+	Skills []string
  
 	// Résistances hors phases
 	Resistances map[Element]float64
