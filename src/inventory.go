@@ -70,6 +70,64 @@ func itemDescription(item Item) string {
 	}
 }
 
+var inventoryCategories = []struct {
+	Type  ItemType
+	Label string
+}{
+	{ItemPotion, "Potions"},
+	{ItemSpellbook, "Grimoires"},
+	{ItemArtifact, "Artefacts"},
+	{ItemResource, "Ressources"},
+	{ItemUpgrade, "Améliorations"},
+}
+
+func displayInventoryByCategory(items []Item) []int {
+	var order []int
+	num := 1
+	for _, cat := range inventoryCategories {
+		var indices []int
+		for i, it := range items {
+			if it.Type == cat.Type {
+				indices = append(indices, i)
+			}
+		}
+		if len(indices) == 0 {
+			continue
+		}
+		fmt.Printf("-- %s --\n", cat.Label)
+
+		seen := make(map[string]bool)
+		for _, i := range indices {
+			item := items[i]
+			if seen[item.Name] {
+				continue
+			}
+			seen[item.Name] = true
+
+			count := 0
+			for _, j := range indices {
+				if items[j].Name == item.Name {
+					count++
+				}
+			}
+
+			label := item.Name
+			if count > 1 {
+				label = fmt.Sprintf("%s x%d", item.Name, count)
+			}
+			if desc := itemDescription(item); desc != "" {
+				fmt.Printf("%d. %s — %s\n", num, label, desc)
+			} else {
+				fmt.Printf("%d. %s\n", num, label)
+			}
+			order = append(order, i)
+			num++
+		}
+		fmt.Println()
+	}
+	return order
+}
+
 func accessInventory(character *Character) {
 	for {
 		if len(character.Inventory) == 0 {
@@ -80,13 +138,9 @@ func accessInventory(character *Character) {
 		clearScreen()
 		displayBanner(bannerInventaire)
 		fmt.Printf("\n(Emplacements : %d/%d)\n\n", len(character.Inventory), character.InventorySize)
-		for i, item := range character.Inventory {
-			if desc := itemDescription(item); desc != "" {
-				fmt.Printf("%d. %s — %s\n", i+1, item.Name, desc)
-			} else {
-				fmt.Printf("%d. %s\n", i+1, item.Name)
-			}
-		}
+
+		order := displayInventoryByCategory(character.Inventory)
+
 		fmt.Println("0. Retour")
 		fmt.Print("Votre choix : ")
 
@@ -94,14 +148,14 @@ func accessInventory(character *Character) {
 		if choice == "0" {
 			return
 		}
-		idx, err := strconv.Atoi(choice)
-		if err != nil || idx < 1 || idx > len(character.Inventory) {
+		pos, err := strconv.Atoi(choice)
+		if err != nil || pos < 1 || pos > len(order) {
 			fmt.Println("Choix invalide.")
 			pauseForInput()
 			continue
 		}
 
-		useItem(character, character.Inventory[idx-1])
+		useItem(character, character.Inventory[order[pos-1]])
 		pauseForInput()
 	}
 }
