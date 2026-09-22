@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 func combatMenu(p *Character) {
@@ -69,6 +70,7 @@ func trainingFight(p *Character, m *Monster) {
 			runCharacterTurn(p, m)
 			if m.CurrentHP <= 0 {
 				endFight(p, m, true)
+				pauseForInput()
 				return
 			}
 			runMonsterTurn(p, m, turn)
@@ -91,7 +93,7 @@ func trainingFight(p *Character, m *Monster) {
 		}
  
 		resolveEffects(p, m)
-		pauseForInput()
+		autoAdvance(3)
 		turn++
 	}
 }
@@ -99,6 +101,35 @@ func trainingFight(p *Character, m *Monster) {
 func pauseForInput() {
 	fmt.Print("\n(Appuyez sur Entrée pour continuer...)")
 	readInput()
+}
+
+func printSequential(lines ...string) {
+	const charDelay = 25 * time.Millisecond
+
+	for _, line := range lines {
+		for _, r := range line {
+			fmt.Print(string(r))
+			time.Sleep(charDelay)
+		}
+		fmt.Println()
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func autoAdvance(seconds int) {
+	for i := seconds; i > 0; i-- {
+		fmt.Print("\r\033[K")
+
+		if i == 1 {
+			fmt.Printf("(Tour suivant dans %d seconde...)", i)
+		} else {
+			fmt.Printf("(Tour suivant dans %d secondes...)", i)
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	fmt.Print("\r\033[K")
 }
 
 func checkPlayerDefeat(p *Character) bool {
@@ -154,8 +185,10 @@ func runCharacterTurn(p *Character, m *Monster) {
 
 func basicAttack(p *Character, m *Monster) {
 	dmg := dealDamage(p.Attack, p.Species.Element, m, false)
-	fmt.Printf("%s inflige %d dégâts à %s\n", p.Name, dmg, m.Name)
-	fmt.Printf("%s  PV : %d/%d\n", m.Name, m.CurrentHP, m.MaxHP)
+	printSequential(
+		fmt.Sprintf("%s inflige %d dégâts à %s", p.Name, dmg, m.Name),
+		fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP),
+	)
 	announcePhaseChange(m)
 }
 
@@ -236,10 +269,13 @@ func spellMenu(p *Character, m *Monster) bool {
 		message, ok := castSpell(p, m, spell)
 		fmt.Println(message)
 		if !ok {
+			fmt.Println(message)
 			continue
 		}
 		if m != nil {
-			fmt.Printf("%s  PV : %d/%d\n", m.Name, m.CurrentHP, m.MaxHP)
+			printSequential(message, fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP))
+		} else {
+			fmt.Println(message)
 		}
 		announcePhaseChange(m)
 		return true
@@ -338,8 +374,10 @@ func monsterBasicAttack(p *Character, m *Monster, percent int) {
 		fmt.Printf("%s attaque, %s esquive !\n", m.Name, p.Name)
 		return
 	}
-	fmt.Printf("%s inflige %d dégâts à %s\n", m.Name, dmg, p.Name)
-	fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
+	printSequential(
+		fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
+		fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
+	)
 }
 
 func verPattern(p *Character, m *Monster) {
@@ -445,8 +483,10 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 			if dodged {
 				fmt.Println(p.Name + " esquive !")
 			} else {
-				fmt.Printf("%s inflige %d dégâts à %s\n", m.Name, dmg, p.Name)
-				fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
+				printSequential(
+					fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
+					fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
+				)
 			}
 		}
  
@@ -467,8 +507,10 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		if dodged {
 			fmt.Println(p.Name + " esquive !")
 		} else {
-			fmt.Printf("%s inflige %d dégâts à %s\n", m.Name, dmg, p.Name)
-			fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
+			printSequential(
+				fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
+				fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
+			)
 		}
 	}
 }
