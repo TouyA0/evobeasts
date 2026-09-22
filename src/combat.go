@@ -440,27 +440,27 @@ func verPattern(p *Character, m *Monster) {
 func sanglierPattern(p *Character, m *Monster, turn int) {
 	percent := 100
 	if turn%3 == 0 {
-		percent = 130
+		percent = sanglierChargePct
 		fmt.Println(m.Name + " charge !")
-		if rand.Intn(100) < 30 {
+		if rand.Intn(100) < sanglierStunChance {
 			p.SkipNextTurn = true
 			fmt.Println(p.Name + " est étourdi pour le prochain tour !")
 		}
 	}
- 
+
 	fraction := float64(m.CurrentHP) / float64(m.MaxHP)
 	if fraction <= 0.25 {
-		percent = percent * 160 / 100
+		percent = percent * sanglierEnrage25Pct / 100
 	} else if fraction <= 0.50 {
-		percent = percent * 130 / 100
+		percent = percent * sanglierEnrage50Pct / 100
 	}
- 
+
 	monsterBasicAttack(p, m, percent)
 }
 
 func loupGarouPattern(p *Character, m *Monster, turn int) {
 	if !m.HowlUsed && turn == 3 {
-		m.Attack += 5
+		m.Attack += loupGarouHowlBonusAtk
 		m.HowlUsed = true
 		fmt.Println(m.Name + " hurle à la lune ! Son attaque augmente.")
 	}
@@ -475,15 +475,15 @@ func loupGarouPattern(p *Character, m *Monster, turn int) {
 	}
 	if !hasRegen {
 		m.Effects = append(m.Effects, StatusEffect{
-			Name: "Régénération lunaire", TurnsLeft: PermanentEffectDuration, HealPerTurn: 6,
+			Name: "Régénération lunaire", TurnsLeft: PermanentEffectDuration, HealPerTurn: loupGarouRegenHeal,
 		})
 	}
  
 	if turn%2 == 0 {
 		fmt.Println(m.Name + " lacère avec fureur !")
-		monsterBasicAttack(p, m, 70)
+		monsterBasicAttack(p, m, loupGarouClawPct)
 		if p.CurrentHP > 0 {
-			monsterBasicAttack(p, m, 70)
+			monsterBasicAttack(p, m, loupGarouClawPct)
 		}
 	} else {
 		monsterBasicAttack(p, m, 100)
@@ -495,12 +495,12 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 	case 0: // Éveil Igné
 		if turn%2 == 0 {
 			fmt.Println(m.Name + " crache un souffle ardent !")
-			monsterBasicAttack(p, m, 120)
+			monsterBasicAttack(p, m, dragonSouffleArdentPct)
 			p.Effects = append(p.Effects, StatusEffect{
-				Name: "Brûlure du Dragon", TurnsLeft: 2, DamagePerTurn: 5,
+				Name: "Brûlure du Dragon", TurnsLeft: dragonBrulureDuree, DamagePerTurn: dragonBrulureDmg,
 			})
 		} else {
-			monsterBasicAttack(p, m, 100)
+			monsterBasicAttack(p, m, dragonGriffePct)
 		}
  
 	case 1: // Vague Ancestrale
@@ -512,16 +512,16 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		}
 		if !hasRegen {
 			m.Effects = append(m.Effects, StatusEffect{
-				Name: "Régénération abyssale", TurnsLeft: PermanentEffectDuration, HealPerTurn: 8,
+				Name: "Régénération abyssale", TurnsLeft: PermanentEffectDuration, HealPerTurn: dragonRegenAbyssale,
 			})
 		}
 		if turn%3 == 0 {
 			fmt.Println(m.Name + " vous enveloppe d'une étreinte liquide !")
-			monsterBasicAttack(p, m, 80)
+			monsterBasicAttack(p, m, dragonEtreinteLiquidePct)
 			p.SkipNextTurn = true
 		} else {
 			fmt.Println(m.Name + " déchaîne un raz-de-marée !")
-			monsterBasicAttack(p, m, 120)
+			monsterBasicAttack(p, m, dragonRazDeMareePct)
 		}
  
 	case 2: // Voile Spectral
@@ -530,7 +530,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 			m.Intangible = true
 		} else {
 			fmt.Println(m.Name + " frappe hors du plan, ignorant tout bouclier !")
-			base := m.Attack * 130 / 100
+			base := m.Attack * dragonFrappeHorsPlanPct / 100
 			p.Shield = 0 // la frappe ignore le bouclier
 			dmg, dodged := dealDamageToPlayer(base, m.Element, p)
 			if dodged {
@@ -555,7 +555,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		default:
 			element = ElementSpectre
 		}
-		base := m.Attack * 150 / 100
+		base := m.Attack * dragonConvergencePct / 100
 		dmg, dodged := dealDamageToPlayerElement(base, element, p)
 		if dodged {
 			fmt.Println(p.Name + " esquive !")

@@ -237,6 +237,24 @@ type Character struct {
 	SkipNextTurn   bool // perd son prochain tour
 }
 
+// COMPÉTENCES ENNEMIES
+type SkillKind string
+
+const (
+	SkillAttack SkillKind = "attaque"
+	SkillBuff   SkillKind = "buff"
+	SkillDebuff SkillKind = "debuff"
+	SkillHeal   SkillKind = "soin"
+)
+
+type MonsterSkill struct {
+	Name        string
+	Kind        SkillKind
+	Element     Element
+	DamagePct   int    // % de l'ATK de base, 0 si non-offensif
+	Description string // condition de déclenchement + effet
+}
+
 // MONSTRES
 type Phase struct {
 	Name        string              // "Éveil Igné", "Vague Ancestrale"...
@@ -244,7 +262,7 @@ type Phase struct {
 	Element     Element
 	Resistances map[Element]float64 // multiplicateur de dégâts reçus
 	DamageBonus int                 // % de dégâts bonus (phase finale)
-	Attacks     []string
+	Attacks     []MonsterSkill
 }
 
 type Monster struct {
@@ -255,7 +273,7 @@ type Monster struct {
 	Attack     int
 	Initiative int
 	Element    Element
-	Skills []string
+	Skills []MonsterSkill
  
 	// Résistances hors phases
 	Resistances map[Element]float64

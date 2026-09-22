@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"unicode/utf8"
 	"os"
 	"os/exec"
 	"runtime"
@@ -29,9 +28,24 @@ func clearScreen() {
 }
 
 var ansiEscape = regexp.MustCompile("\x1b\\[[0-9;]*m") // ignore les codes couleurs ANSI
+func runeWidth(r rune) int {
+	switch {
+	case r >= 0x1F300 && r <= 0x1FAFF: // émojis pictographiques (💥🌀💀👻🌫️🔥💚)
+		return 2
+	case r >= 0x2600 && r <= 0x27BF: // symboles/dingbats (⚡✨☠️)
+		return 2
+	default:
+		return 1
+	}
+}
+
 func visibleWidth(s string) int {
 	stripped := ansiEscape.ReplaceAllString(s, "")
-	return utf8.RuneCountInString(stripped)
+	w := 0
+	for _, r := range stripped {
+		w += runeWidth(r)
+	}
+	return w
 }
 
 func padRight(s string, width int) string {
@@ -195,11 +209,26 @@ func vulnerabilityHint(res map[Element]float64) string {
 	return "Vulnérable: " + strings.Join(weak, "/")
 }
 
-func enemySkills(m *Monster) []string {
+func enemySkills(m *Monster) []MonsterSkill {
 	if len(m.Phases) > 0 {
 		return m.Phases[m.CurrentPhase].Attacks
 	}
 	return m.Skills
+}
+
+func skillIcon(k SkillKind) string {
+	switch k {
+	case SkillAttack:
+		return "💥"
+	case SkillBuff:
+		return "⚡"
+	case SkillDebuff:
+		return "🌀"
+	case SkillHeal:
+		return "💚"
+	default:
+		return "✨"
+	}
 }
 
 func nextPhaseHint(m *Monster) string {
@@ -278,9 +307,12 @@ func combatScreen(p *Character, m *Monster, turn int, playerFirst bool) {
 			"\x1b[38;2;180;140;220m"+truncateVisible(hint, creatureArtWidth)+"\x1b[0m")
 	}
 	if skills := enemySkills(m); len(skills) > 0 {
-		skillLine := "Compétences: " + strings.Join(skills, ", ")
-		enemyInfoLines = append(enemyInfoLines,
-			"\x1b[38;2;150;150;170m"+truncateVisible(skillLine, creatureArtWidth)+"\x1b[0m")
+		enemyInfoLines = append(enemyInfoLines, "Compétences :")
+		for _, s := range skills {
+			line := fmt.Sprintf(" %s %s — %s", skillIcon(s.Kind), s.Name, s.Description)
+			enemyInfoLines = append(enemyInfoLines,
+				"\x1b[38;2;150;150;170m"+truncateVisible(line, creatureArtWidth)+"\x1b[0m")
+		}
 	}
 
 	// --- Bloc d'infos joueur (droite) ---

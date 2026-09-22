@@ -1,6 +1,30 @@
 package main
  
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
+
+const (
+	sanglierChargePct   = 130
+	sanglierStunChance  = 30
+	sanglierEnrage50Pct = 130
+	sanglierEnrage25Pct = 160
+
+	loupGarouHowlBonusAtk = 5
+	loupGarouRegenHeal    = 6
+	loupGarouClawPct      = 70
+
+	dragonSouffleArdentPct   = 120
+	dragonBrulureDmg         = 5
+	dragonBrulureDuree       = 2
+	dragonGriffePct          = 100
+	dragonRegenAbyssale      = 8
+	dragonEtreinteLiquidePct = 80
+	dragonRazDeMareePct      = 120
+	dragonFrappeHorsPlanPct  = 130
+	dragonConvergencePct     = 150
+)
 
 func initVer() *Monster {
 	return &Monster{
@@ -11,7 +35,12 @@ func initVer() *Monster {
 		Attack:     3,
 		Initiative: 3,
 		Element:    ElementNeutre,
-		Skills:      []string{"Morsure"},
+		Skills: []MonsterSkill{
+			{
+				Name: "Morsure", Kind: SkillAttack, DamagePct: 100,
+				Description: "Attaque simple à chaque tour (100% ATK).",
+			},
+		},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -32,7 +61,18 @@ func initSanglier() *Monster {
 		Attack:     7,
 		Initiative: 9,
 		Element:    ElementNeutre,
-		Skills:      []string{"Charge", "Enragé"},
+		Skills: []MonsterSkill{
+			{
+				Name: "Charge", Kind: SkillAttack, DamagePct: sanglierChargePct,
+				Description: fmt.Sprintf("Tous les 3 tours : %d%% dégâts, %d%% de chance d'étourdir.",
+					sanglierChargePct, sanglierStunChance),
+			},
+			{
+				Name: "Enragé", Kind: SkillBuff,
+				Description: fmt.Sprintf("Passif : dégâts x%.2f sous 50%% PV, x%.2f sous 25%% PV.",
+					float64(sanglierEnrage50Pct)/100, float64(sanglierEnrage25Pct)/100),
+			},
+		},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -53,7 +93,20 @@ func initLoupGarou() *Monster {
 		Attack:     12,
 		Initiative: 13,
 		Element:    ElementNeutre,
-		Skills:      []string{"Griffure enragée", "Hurlement", "Régénération lunaire"},
+		Skills: []MonsterSkill{
+			{
+				Name: "Griffure enragée", Kind: SkillAttack, DamagePct: loupGarouClawPct,
+				Description: fmt.Sprintf("Tours pairs : 2 attaques à %d%% ATK chacune.", loupGarouClawPct),
+			},
+			{
+				Name: "Hurlement", Kind: SkillBuff,
+				Description: fmt.Sprintf("Au tour 3 (une fois) : +%d ATK permanent.", loupGarouHowlBonusAtk),
+			},
+			{
+				Name: "Régénération lunaire", Kind: SkillHeal,
+				Description: fmt.Sprintf("Passif dès le début : soigne %d PV/tour, indéfiniment.", loupGarouRegenHeal),
+			},
+		},
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
@@ -90,21 +143,53 @@ func initDragonAncien() *Monster {
 				Resistances: map[Element]float64{
 					ElementFeu: 0.5, ElementEau: 1.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
-				Attacks: []string{"Souffle ardent", "Griffe"},
+				Attacks: []MonsterSkill{
+					{
+						Name: "Souffle ardent", Kind: SkillAttack, Element: ElementFeu, DamagePct: dragonSouffleArdentPct,
+						Description: fmt.Sprintf("Tours pairs : %d%% dégâts + brûlure %d dégâts/tour (%d tours).",
+							dragonSouffleArdentPct, dragonBrulureDmg, dragonBrulureDuree),
+					},
+					{
+						Name: "Griffe", Kind: SkillAttack, DamagePct: dragonGriffePct,
+						Description: fmt.Sprintf("Tours impairs : %d%% dégâts.", dragonGriffePct),
+					},
+				},
 			},
 			{
 				Name: "Vague Ancestrale", HPThreshold: 0.75, Element: ElementEau,
 				Resistances: map[Element]float64{
 					ElementFeu: 1.5, ElementEau: 0.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
-				Attacks: []string{"Raz-de-marée", "Étreinte liquide"},
+				Attacks: []MonsterSkill{
+					{
+						Name: "Étreinte liquide", Kind: SkillAttack, Element: ElementEau, DamagePct: dragonEtreinteLiquidePct,
+						Description: fmt.Sprintf("Tous les 3 tours : %d%% dégâts + étourdissement.", dragonEtreinteLiquidePct),
+					},
+					{
+						Name: "Raz-de-marée", Kind: SkillAttack, Element: ElementEau, DamagePct: dragonRazDeMareePct,
+						Description: fmt.Sprintf("Sinon : %d%% dégâts.", dragonRazDeMareePct),
+					},
+					{
+						Name: "Régénération abyssale", Kind: SkillHeal,
+						Description: fmt.Sprintf("Passif : soigne %d PV/tour.", dragonRegenAbyssale),
+					},
+				},
 			},
 			{
 				Name: "Voile Spectral", HPThreshold: 0.50, Element: ElementSpectre,
 				Resistances: map[Element]float64{
 					ElementFeu: 1.0, ElementEau: 1.5, ElementSpectre: 0.5, ElementNeutre: 1.0,
 				},
-				Attacks: []string{"Frappe hors du plan", "Dissolution"},
+				Attacks: []MonsterSkill{
+					{
+						Name: "Dissolution", Kind: SkillBuff, Element: ElementSpectre,
+						Description: "Tous les 4 tours : esquive tout ce tour.",
+					},
+					{
+						Name: "Frappe hors du plan", Kind: SkillAttack, Element: ElementSpectre, DamagePct: dragonFrappeHorsPlanPct,
+						Description: fmt.Sprintf("Sinon : %d%% dégâts, ignore le bouclier.", dragonFrappeHorsPlanPct),
+					},
+				},
 			},
 			{
 				Name: "Convergence", HPThreshold: 0.25, Element: ElementNeutre,
@@ -112,7 +197,13 @@ func initDragonAncien() *Monster {
 					ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
 				DamageBonus: 50,
-				Attacks:     []string{"Souffle ardent", "Raz-de-marée", "Frappe hors du plan"},
+				Attacks: []MonsterSkill{
+					{
+						Name: "Convergence élémentaire", Kind: SkillAttack, DamagePct: dragonConvergencePct,
+						Description: fmt.Sprintf("%d%% dégâts, élément change chaque tour (Feu→Eau→Spectre), +50%% dégâts de phase.",
+							dragonConvergencePct),
+					},
+				},
 			},
 		},
 	}
