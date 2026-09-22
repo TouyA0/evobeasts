@@ -124,7 +124,7 @@ func isDead(p *Character) bool {
 		return false
 	}
  
-	if p.Species.Name == EspecePhenix {
+	if p.Species.Name == EspecePhenix && p.Stage == 4 {
 		p.CurrentHP = p.MaxHP / 2
 		fmt.Println(p.Name + " renaît de ses cendres avec la moitié de ses PV.")
 		return true
