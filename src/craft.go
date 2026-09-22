@@ -114,6 +114,7 @@ func craftMenu(p *Character) {
 	list := recipes()
 
 	for {
+		clearScreen()
 		fmt.Printf("\n=== Forgeron === (Or : %d)\n", p.Gold)
 		craftDisplay(list)
 		fmt.Print("Votre choix : ")
@@ -126,6 +127,7 @@ func craftMenu(p *Character) {
 		idx, err := strconv.Atoi(choice)
 		if err != nil || idx < 1 || idx > len(list) {
 			fmt.Println("Choix invalide.")
+			pauseForInput()
 			continue
 		}
 
@@ -133,11 +135,13 @@ func craftMenu(p *Character) {
 		ok, reason := canCraft(p, recipe)
 		if !ok {
 			fmt.Println(reason)
+			pauseForInput()
 			continue
 		}
 
 		craftItem(p, recipe)
 		fmt.Println("Vous avez fabriqué : " + recipe.Result.Name)
+		pauseForInput()
 	}
 }
 

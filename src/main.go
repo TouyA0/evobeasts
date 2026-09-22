@@ -4,13 +4,22 @@ import "fmt"
 
 func main() {
 	displayTitleScreen()
+	fmt.Println()
+	fmt.Println("Appuyez sur Entrée pour continuer...")
+	readInput()
+	clearScreen()
+ 
 	player := characterCreation()
+	clearScreen()
+ 
 	playMusic(musicAmbiance)
+ 
 	mainMenu(player)
 }
 
 func mainMenu(p *Character) {
 	for {
+		clearScreen()
 		fmt.Println("\n--- Menu principal ---")
 		fmt.Println("1. Afficher les informations du personnage")
 		fmt.Println("2. Accéder à l'inventaire")
@@ -43,5 +52,7 @@ func mainMenu(p *Character) {
 		default:
 			fmt.Println("Choix invalide.")
 		}
+
+		pauseForInput()
 	}
 }

@@ -42,18 +42,21 @@ func merchantMenu(p *Character) {
 	items := merchantCatalog()
 
 	for {
+		clearScreen()
 		fmt.Printf("\n=== Marchand === (Or : %d)\n", p.Gold)
 		merchantDisplay(items)
 
 		choice, err := strconv.Atoi(readInput())
 		if err != nil || choice < 0 || choice > len(items) {
 			fmt.Println("Choix invalide.")
+			pauseForInput()
 			continue
 		}
 		if choice == 0 {
 			return
 		}
 		buyItem(p, items[choice-1])
+		pauseForInput()
 	}
 }
 
