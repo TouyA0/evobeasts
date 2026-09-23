@@ -450,7 +450,7 @@ func monsterBasicAttack(p *Character, m *Monster, percent int) {
 	}
 	printSequential(
 		fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
-		fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP),
+		fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
 	)
 }
 
