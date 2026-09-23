@@ -64,6 +64,7 @@ func mainMenu(p *Character) {
 				stopMusic()
 				return
 			}
+			continue
 		case 5:
 			showArtists()
 		case 6:
