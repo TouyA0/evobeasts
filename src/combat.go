@@ -103,6 +103,16 @@ func trainingFight(p *Character, m *Monster) {
 		}
  
 		resolveEffects(p, m)
+		if m.CurrentHP <= 0 {
+			endFight(p, m, true)
+			pauseForInput()
+			storyPostFight(p, m.Tier)
+			return
+		}
+		if checkPlayerDefeat(p) {
+			pauseForInput()
+			return
+		}
 		autoAdvance(3)
 		turn++
 	}
@@ -225,6 +235,11 @@ func basicAttack(p *Character, m *Monster) {
 	base := p.Attack + effectiveAttackBonus(p.Effects)
 	if base < 0 {
 		base = 0
+	}
+	if p.Invisible {
+		base += base * p.InvisibleBonus / 100
+		p.Invisible = false
+		p.InvisibleBonus = 0
 	}
 	dmg := dealDamage(base, p.Species.Element, m, false)
 	printSequential(
@@ -424,8 +439,10 @@ func runMonsterTurn(p *Character, m *Monster, turn int) {
 	if m.SkipNextTurn {
 		fmt.Println(m.Name + " ne peut pas agir ce tour-ci.")
 		m.SkipNextTurn = false
+		m.StunImmune = true
 		return
 	}
+	m.StunImmune = false
  
 	switch m.Name {
 	case MonstreVer:
@@ -636,9 +653,9 @@ func dealDamage(base int, element Element, target *Monster, ignoreResist bool) i
 		return 0
 	}
 
-	mult := 1.0
-	if !ignoreResist {
-		mult = monsterResistance(target, element)
+	mult := monsterResistance(target, element)
+	if ignoreResist && mult < 1.0 {
+		mult = 1.0
 	}
 	amount := int(float64(base) * mult)
 	if amount < 0 {
@@ -667,7 +684,11 @@ func dealDamageToPlayer(base int, element Element, p *Character) (int, bool) {
 }
 
 func dealDamageToPlayerElement(base int, element Element, p *Character) (int, bool) {
-	if rand.Intn(100) < p.DodgeRate {
+	dodge := p.DodgeRate
+	if p.Invisible {
+		dodge += InvisibleDodgeBonus
+	}
+	if rand.Intn(100) < dodge {
 		return 0, true
 	}
  
@@ -734,6 +755,9 @@ func resolveEffects(p *Character, m *Monster) {
 			}
 			announcePhaseChange(m)
 		}, func(heal int) {
+			if m.CurrentHP <= 0 {
+				return
+			}
 			m.CurrentHP += heal
 			if m.CurrentHP > m.MaxHP {
 				m.CurrentHP = m.MaxHP

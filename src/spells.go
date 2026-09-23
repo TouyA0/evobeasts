@@ -102,7 +102,7 @@ func allSpells() []Spell {
 		},
 		{
 			Name: "Camouflage", Element: ElementSpectre,
-			Description: "Devient invisible : le prochain sort offensif frappe plus de deux fois plus fort.",
+			Description: "Devient invisible : esquive accrue, et la prochaine attaque frappe plus de deux fois plus fort.",
 			MinStage: 2, ManaCost: 11,
 			Invisible: true, InvisibleBonus: 130,
 		},
@@ -110,11 +110,11 @@ func allSpells() []Spell {
 			Name: "Frappe chromatique", Element: ElementSpectre,
 			Description: "Un éclair de couleurs, dégâts élevés.",
 			MinStage: 3, ManaCost: 13,
-			Damage: 26,
+			Damage: 30,
 		},
 		{
 			Name: "Voile chromatique", Element: ElementSpectre,
-			Description: "Invisibilité renforcée : le prochain sort offensif frappe près de trois fois plus fort.",
+			Description: "Invisibilité renforcée : esquive accrue, et la prochaine attaque frappe près de trois fois plus fort.",
 			MinStage: 3, ManaCost: 15,
 			Invisible: true, InvisibleBonus: 170,
 		},
@@ -122,20 +122,20 @@ func allSpells() []Spell {
 			Name: "Lame spectrale", Element: ElementSpectre,
 			Description: "Frappe à moitié hors du plan, ignore les résistances de la cible.",
 			MinStage: 4, ManaCost: 15,
-			Damage: 28,
+			Damage: 32, IgnoreResist: true,
 		},
 		{
 			Name: SortExecutionSpectrale, Element: ElementSpectre,
-			Description: "Frappe fatale, dévastatrice si lancée depuis l'invisibilité.",
-			MinStage: 4, ManaCost: 26,
-			Damage:     30,
+			Description: "Frappe fatale qui ignore les résistances, dévastatrice depuis l'invisibilité.",
+			MinStage: 4, ManaCost: 20,
+			Damage: 35, IgnoreResist: true,
 			IsUltimate: true,
 		},
 
 		// --- Sort acheté, indépendant de toute espèce ---
 		{
 			Name: SortSoufflePrimordial, Element: ElementNeutre,
-			Description: "Un souffle d'énergie brute : jamais résisté, jamais amplifié. Le recours quand l'élément ne passe pas.",
+			Description: "Un souffle d'énergie brute : jamais résisté. Le recours quand l'élément ne passe pas.",
 			MinStage: 0, ManaCost: 13,
 			Damage: 24,
 		},
@@ -242,7 +242,11 @@ func castSpell(p *Character, m *Monster, spell Spell) (string, bool) {
 		})
 	}
 	if spell.SkipEnemyTurn && m != nil {
-		m.SkipNextTurn = true
+		if m.StunImmune {
+			message += " (" + m.Name + " résiste à l'immobilisation)"
+		} else {
+			m.SkipNextTurn = true
+		}
 	}
 	if spell.InitiativeDebuff > 0 && m != nil {
 		m.Effects = applyEffect(m.Effects, StatusEffect{

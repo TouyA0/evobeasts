@@ -90,7 +90,8 @@ const (
 	RenaissanceHPPct     = 40 // % des PV max rendus par Renaissance
 	RenaissanceAtkBuff   = 8  // bonus d'attaque accordé par Renaissance
 	RenaissanceBuffTurns = 4  // durée de ce bonus
-	ExecutionFurtiveDmg  = 75 // dégâts de l'Exécution spectrale lancée depuis l'invisibilité
+	ExecutionFurtiveDmg  = 110 // dégâts de l'Exécution spectrale lancée depuis l'invisibilité
+	InvisibleDodgeBonus  = 40  // % d'esquive en plus tant qu'on est invisible
 )
 
 // ÉLÉMENTS
@@ -323,6 +324,7 @@ type Monster struct {
 	Shield       int
 	Intangible   bool
 	SkipNextTurn bool
+	StunImmune   bool // vient d'être étourdi, ne peut pas l'être au tour suivant
  
 	// Suivi du pattern d'attaque
 	TurnCounter int  // tour courant, pour les patterns cycliques
