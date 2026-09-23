@@ -1,11 +1,11 @@
 package main
 
-const bannerMenu = "assets/banners/banniere_menu.png"
-const bannerMerchant = "assets/banners/banniere_marchand.png"
-const bannerForge = "assets/banners/banniere_forge.png"
-const bannerInventaire = "assets/banners/banniere_inventaire.png"
-const bannerCombat = "assets/banners/banniere_combat.png"
-const bannerMemoires = "assets/banners/banniere_memoires.png"
+const bannerMenu = "assets/ui/banners/banniere_menu.png"
+const bannerMerchant = "assets/ui/banners/banniere_marchand.png"
+const bannerForge = "assets/ui/banners/banniere_forge.png"
+const bannerInventaire = "assets/ui/banners/banniere_inventaire.png"
+const bannerCombat = "assets/ui/banners/banniere_combat.png"
+const bannerMemoires = "assets/ui/banners/banniere_memoires.png"
 const bannerWidth = 120
 
 func displayBanner(path string) {

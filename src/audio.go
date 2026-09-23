@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	musicAmbiance = "assets/musique_ambiance.mp3"
-	musicCombat   = "assets/musique_combat.mp3"
-	musicBoss     = "assets/musique_boss.mp3"
-	musicGloire   = "assets/musique_gloire.mp3"
+	musicAmbiance = "assets/audio/musique_ambiance.mp3"
+	musicCombat   = "assets/audio/musique_combat.mp3"
+	musicBoss     = "assets/audio/musique_boss.mp3"
+	musicGloire   = "assets/audio/musique_gloire.mp3"
 )
 
 const baseSampleRate beep.SampleRate = 44100
