@@ -8,37 +8,35 @@ import (
 	"time"
 )
 
+var combatMonsters = []menuOption{
+	{MonstreVer, themeVert},
+	{MonstreSanglier, themeOrange},
+	{MonstreLoupGarou, themeViolet},
+	{MonstreDragonAncien, themeRouge},
+}
+
 func combatMenu(p *Character) {
+	banner, _ := renderImageString(bannerCombat, bannerWidth)
+	selected := 0
+
 	for {
-		clearScreen()
-		displayBanner(bannerCombat)
+		unlocked := min(p.MaxTierDefeated+1, len(combatMonsters))
 
-		unlocked := p.MaxTierDefeated + 1
-		if unlocked > 4 {
-			unlocked = 4
+		options := []menuOption{}
+		for i := 0; i < unlocked; i++ {
+			options = append(options, combatMonsters[i])
 		}
-		names := []string{MonstreVer, MonstreSanglier, MonstreLoupGarou, MonstreDragonAncien}
+		options = append(options, menuOption{"Retour", themeGris})
 
-		lines := []string{}
-		for i := 1; i <= unlocked; i++ {
-			lines = append(lines, fmt.Sprintf("%d. %s", i, names[i-1]))
-		}
-		lines = append(lines, "0. Retour")
-		fmt.Print(boxify(lines))
-		fmt.Print("Votre choix : ")
-
-		choice := readInput()
-		if choice == "0" {
+		choice := selectMenuFrom(len(options), selected, func(sel int) string {
+			return banner + "\n" + boxify(menuLines(options, sel))
+		})
+		if choice == unlocked {
 			return
 		}
+		selected = choice
 
-		tier, err := strconv.Atoi(choice)
-		if err != nil || tier < 1 || tier > unlocked {
-			fmt.Println("Choix invalide.")
-			pauseForInput()
-			continue
-		}
-
+		tier := choice + 1
 		monster := monsterByTier(tier)
 		storyPreFight(p, tier)
 		trainingFight(p, monster)
@@ -119,8 +117,7 @@ func trainingFight(p *Character, m *Monster) {
 }
 
 func pauseForInput() {
-	fmt.Print("\n(Appuyez sur Entrée pour continuer...)")
-	readInput()
+	button("Continuer", themeVert)
 }
 
 func printSequential(lines ...string) {
@@ -182,51 +179,48 @@ func runCharacterTurn(p *Character, m *Monster) {
 		return
 	}
 
+	actions := []menuOption{
+		{"Attaquer", themeRouge},
+		{"Sorts", themeViolet},
+		{"Inventaire", themeBleu},
+	}
 	message := ""
-	linesPrinted := 0
+	selected := 0
 
 	for {
-		if linesPrinted > 0 {
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		choice := inlineSelect(len(actions), selected, menuHintSide, func(sel int) string {
+			bar := make([]string, len(actions))
+			for i, a := range actions {
+				bar[i] = menuLine(a.label, 0, i == sel, a.theme)
+			}
+			text := "\n" + strings.Join(bar, "  ")
+			if message != "" {
+				text += "\n\n" + message
+			}
+			return text
+		})
+		if choice == -1 {
+			continue // Échap : il n'y a rien à annuler à ce niveau
 		}
-
-		var b strings.Builder
-		b.WriteString("\n1. Attaquer   2. Sorts   3. Inventaire\n")
-		if message != "" {
-			b.WriteString(message + "\n")
- 		}
-		text := b.String()
-		fmt.Print(text)
-		fmt.Print("Votre choix : ")
-		linesPrinted = strings.Count(text, "\n") + 1
-
-		choice := readInput()
+		selected = choice
+		message = ""
 
 		switch choice {
-		case "1":
+		case 0:
 			basicAttack(p, m)
 			return
-
-		case "2":
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
-			linesPrinted = 0
+		case 1:
 			used, msg := spellMenu(p, m)
 			if used {
 				return
 			}
-			 message = msg
-
-		case "3":
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
-			linesPrinted = 0
+			message = msg
+		case 2:
 			used, msg := combatInventoryMenu(p, m)
 			if used {
 				return
 			}
 			message = msg
-
-		default:
-			message = "Choix invalide. Veuillez entrer un nombre entre 1 et 3."
 		}
 	}
 }
@@ -285,54 +279,18 @@ func spellMenu(p *Character, m *Monster) (bool, string) {
 	}
 
 	message := ""
-	linesPrinted := 0
+	selected := 0
 
 	for {
-		if linesPrinted > 0 {
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
-		}
-
-		var b strings.Builder
-		b.WriteString("Sorts :\n")
-		for i, s := range castable {
-			tag := ""
-			if s.Element != p.Species.Element {
-				tag += fmt.Sprintf(" [%s]", s.Element)
-			}
-			if s.IsUltimate {
-				tag += " (ULTIME)"
-			}
-
-			ok, reason := canCastSpell(p, s)
-			if ok {
-				b.WriteString(fmt.Sprintf("%d. %s %s%s (%d mana)\n", i+1, spellIcon(s), s.Name, tag, s.ManaCost))
-			} else {
-				b.WriteString(fmt.Sprintf("\x1b[38;2;220;70;70m%d. %s %s%s (%d mana) — %s\x1b[0m\n",
-					i+1, spellIcon(s), s.Name, tag, s.ManaCost, reason))
-			}
-			b.WriteString(fmt.Sprintf("   %s\n", s.Description))
-		}
-		b.WriteString("0. Retour\n")
-		if message != "" {
-			b.WriteString(message + "\n")
-		}
-		text := b.String()
-		fmt.Print(text)
-		fmt.Print("Votre choix : ")
-		linesPrinted = strings.Count(text, "\n") + 1
-
-		choice := readInput()
-		if choice == "0" {
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		choice := inlineSelect(len(castable)+1, selected, menuHintBack, func(sel int) string {
+			return spellMenuText(p, castable, sel, message)
+		})
+		if choice == -1 || choice == len(castable) {
 			return false, ""
 		}
-		idx, err := strconv.Atoi(choice)
-		if err != nil || idx < 1 || idx > len(castable) {
-			message = "Choix invalide."
-			continue
-		}
+		selected = choice
 
-		spell := castable[idx-1]
+		spell := castable[choice]
 		if ok, reason := canCastSpell(p, spell); !ok {
 			message = "Sort inutilisable : " + reason
 			continue
@@ -353,109 +311,108 @@ func spellMenu(p *Character, m *Monster) (bool, string) {
 	}
 }
 
-func combatInventoryDisplay(b *strings.Builder, items []Item) []Item {
-	var display []Item
-	num := 1
-	for _, cat := range inventoryCategories {
-		seen := make(map[string]bool)
-		for _, it := range items {
-			if it.Type != cat.Type || seen[it.Name] {
-				continue
-			}
-			if it.HealValue <= 0 && it.ManaValue <= 0 && it.PoisonDamage <= 0 {
-				continue
-			}
-			seen[it.Name] = true
-
-			count := 0
-			for _, other := range items {
-				if other.Name == it.Name {
-					count++
-				}
-			}
-
-			label := it.Name
-			if count > 1 {
-				label = fmt.Sprintf("%s x%d", it.Name, count)
-			}
-			if desc := itemDescription(it); desc != "" {
-				b.WriteString(fmt.Sprintf("%d. %s — %s\n", num, label, desc))
-			} else {
-				b.WriteString(fmt.Sprintf("%d. %s\n", num, label))
-			}
-			display = append(display, it)
-			num++
+func spellMenuText(p *Character, castable []Spell, sel int, message string) string {
+	labels := make([]string, len(castable))
+	for i, s := range castable {
+		tag := ""
+		if s.Element != p.Species.Element {
+			tag += fmt.Sprintf(" [%s]", s.Element)
 		}
+		if s.IsUltimate {
+			tag += " (ULTIME)"
+		}
+		labels[i] = fmt.Sprintf("%s %s%s (%d mana)", spellIcon(s), s.Name, tag, s.ManaCost)
 	}
-	return display
+	width := maxWidth(append(labels, "Retour")...)
+
+	lines := []string{"Sorts :"}
+	for i, s := range castable {
+		ok, reason := canCastSpell(p, s)
+		theme := elementTheme(s.Element)
+		if s.IsUltimate {
+			theme = themeOr
+		}
+		if !ok {
+			theme = themeGris
+		}
+
+		line := menuLine(labels[i], width, i == sel, theme)
+		if !ok {
+			if i != sel {
+				line = "\x1b[38;2;220;70;70m" + line + "\x1b[0m"
+			}
+			line += "  \x1b[38;2;220;70;70m— " + reason + "\x1b[0m"
+		}
+		lines = append(lines, line, "      \x1b[90m"+s.Description+"\x1b[0m")
+	}
+
+	lines = append(lines, "", menuLine("Retour", width, sel == len(castable), themeGris))
+	if message != "" {
+		lines = append(lines, "", message)
+	}
+	return strings.Join(lines, "\n")
 }
 
 func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
-	if len(p.Inventory) == 0 {
-		return false, "Inventaire vide."
+	var usable []inventoryEntry
+	for _, e := range inventoryEntries(p.Inventory) {
+		it := p.Inventory[e.index]
+		if it.HealValue > 0 || it.ManaValue > 0 || it.PoisonDamage > 0 {
+			usable = append(usable, e)
+		}
+	}
+	if len(usable) == 0 {
+		return false, "Aucun objet utilisable en combat."
 	}
 
-	var display []Item
-	message := ""
-	linesPrinted := 0
-	for {
-		if linesPrinted > 0 {
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+	choice := inlineSelect(len(usable)+1, 0, menuHintBack, func(sel int) string {
+		labels := []string{"Retour"}
+		for _, e := range usable {
+			labels = append(labels, e.label)
 		}
+		width := maxWidth(labels...)
 
-		var b strings.Builder
-		b.WriteString("Inventaire :\n")
-		display = combatInventoryDisplay(&b, p.Inventory)
-		if len(display) == 0 {
-			b.WriteString("Aucun objet utilisable en combat.\n")
-		}
-		b.WriteString("0. Retour\n")
-		if message != "" {
-			b.WriteString(message + "\n")
-		}
-		text := b.String()
-		fmt.Print(text)
-		fmt.Print("Votre choix : ")
-		linesPrinted = strings.Count(text, "\n") + 1
-
-		choice := readInput()
-		if choice == "0" {
-			fmt.Printf("\033[%dA\033[0J", linesPrinted)
-			return false, ""
-		}
-		i, err := strconv.Atoi(choice)
-		if err != nil || i < 1 || i > len(display) {
-			message = "Choix invalide."
-			continue
-		}
-		idx := i
-		item := display[idx-1]
-		fmt.Println("Vous utilisez " + item.Name)
-
-		switch {
-		case item.HealValue > 0:
-			p.CurrentHP += item.HealValue
-			if p.CurrentHP > p.MaxHP {
-				p.CurrentHP = p.MaxHP
+		lines := []string{"Inventaire :"}
+		for i, e := range usable {
+			line := menuLine(e.label, width, i == sel, e.theme)
+			if e.desc != "" {
+				line += "  \x1b[90m" + e.desc + "\x1b[0m"
 			}
-			fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
-		case item.ManaValue > 0:
-			p.CurrentMana += item.ManaValue
-			if p.CurrentMana > p.MaxMana {
-				p.CurrentMana = p.MaxMana
-			}
-			fmt.Printf("%s  Mana : %d/%d\n", p.Name, p.CurrentMana, p.MaxMana)
-		case item.PoisonDamage > 0:
-			m.Effects = applyEffect(m.Effects, StatusEffect{
-				Name: item.Name, TurnsLeft: item.PoisonTicks,
-				DamagePerTurn: item.PoisonDamage,
-			})
-			fmt.Println(item.Name + " est jetée sur " + m.Name + " !")
+			lines = append(lines, line)
 		}
-
-		removeInventory(p, item.Name)
-		return true, ""
+		lines = append(lines, "", menuLine("Retour", width, sel == len(usable), themeGris))
+		return strings.Join(lines, "\n")
+	})
+	if choice == -1 || choice == len(usable) {
+		return false, ""
 	}
+
+	item := p.Inventory[usable[choice].index]
+	fmt.Println("Vous utilisez " + item.Name)
+
+	switch {
+	case item.HealValue > 0:
+		p.CurrentHP += item.HealValue
+		if p.CurrentHP > p.MaxHP {
+			p.CurrentHP = p.MaxHP
+		}
+		fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
+	case item.ManaValue > 0:
+		p.CurrentMana += item.ManaValue
+		if p.CurrentMana > p.MaxMana {
+			p.CurrentMana = p.MaxMana
+		}
+		fmt.Printf("%s  Mana : %d/%d\n", p.Name, p.CurrentMana, p.MaxMana)
+	case item.PoisonDamage > 0:
+		m.Effects = applyEffect(m.Effects, StatusEffect{
+			Name: item.Name, TurnsLeft: item.PoisonTicks,
+			DamagePerTurn: item.PoisonDamage,
+		})
+		fmt.Println(item.Name + " est jetée sur " + m.Name + " !")
+	}
+
+	removeInventory(p, item.Name)
+	return true, ""
 }
 
 func announcePhaseChange(m *Monster) {

@@ -453,8 +453,7 @@ func storyFinale(p *Character) {
 func storyChoiceScreen() string {
 	totalWidth := storyColWidth*2 + 3
 
-	left := strings.Join([]string{
-		"\x1b[38;2;120;220;140m  [ 1 ]  ÉPARGNER\x1b[0m",
+	leftBody := []string{
 		"",
 		"  Il perd son sort draconique.",
 		"  Les trois éléments retournent",
@@ -468,10 +467,8 @@ func storyChoiceScreen() string {
 		"  ──────────────────────────────",
 		"  Tu leur rends leur vie.",
 		"  Tu ne leur rends pas justice.",
-	}, "\n")
-
-	right := strings.Join([]string{
-		"\x1b[38;2;230;110;110m[ 2 ]  ACHEVER\x1b[0m",
+	}
+	rightBody := []string{
 		"",
 		"Il ne se relèvera plus jamais.",
 		"Les trois éléments s'éteignent",
@@ -485,29 +482,27 @@ func storyChoiceScreen() string {
 		"──────────────────────────────",
 		"Tu leur rends justice.",
 		"Tu ne leur rends pas leur vie.",
-	}, "\n")
-
-	for {
-		clearScreen()
-		fmt.Println()
-		fmt.Println(centerText("\x1b[1mQUE FAIS-TU ?\x1b[0m", totalWidth))
-		fmt.Println()
-		fmt.Print(dividedColumns(left, right, storyColWidth))
-		fmt.Println()
-		prompt := "Ton choix (1 ou 2) : "
-		pad := (totalWidth - visibleWidth(prompt)) / 2
-		if pad < 0 {
-			pad = 0
-		}
-		fmt.Print(strings.Repeat(" ", pad) + prompt)
-
-		switch readInput() {
-		case "1":
-			return "1"
-		case "2":
-			return "2"
-		}
 	}
+
+	// Titre de colonne : barre de couleur si sélectionné, texte coloré sinon.
+	header := func(label string, selected bool, t menuTheme) string {
+		if selected {
+			return menuLine(label, 0, true, t)
+		}
+		return "\x1b[38;2;" + t.bg + "m" + menuLine(label, 0, false, t) + "\x1b[0m"
+	}
+
+	choice := selectMenuHint(2, 0, menuHintSide, func(sel int) string {
+		left := strings.Join(append([]string{"  " + header("ÉPARGNER", sel == 0, themeVert)}, leftBody...), "\n")
+		right := strings.Join(append([]string{header("ACHEVER", sel == 1, themeRouge)}, rightBody...), "\n")
+		return "\n" + centerText("\x1b[1mQUE FAIS-TU ?\x1b[0m", totalWidth) + "\n\n" +
+			dividedColumns(left, right, storyColWidth)
+	})
+
+	if choice == 0 {
+		return "1"
+	}
+	return "2"
 }
 
 func storyEndingClemence(p *Character) {

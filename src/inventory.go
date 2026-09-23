@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -73,89 +72,100 @@ func itemDescription(item Item) string {
 var inventoryCategories = []struct {
 	Type  ItemType
 	Label string
+	Theme menuTheme
 }{
-	{ItemPotion, "Potions"},
-	{ItemSpellbook, "Grimoires"},
-	{ItemArtifact, "Artefacts"},
-	{ItemResource, "Ressources"},
-	{ItemUpgrade, "Améliorations"},
+	{ItemPotion, "Potions", themeRouge},
+	{ItemSpellbook, "Grimoires", themeViolet},
+	{ItemArtifact, "Artefacts", themeOr},
+	{ItemResource, "Ressources", themeTurquoise},
+	{ItemUpgrade, "Améliorations", themeBleu},
 }
 
-func displayInventoryByCategory(items []Item) []int {
-	var order []int
-	num := 1
-	for _, cat := range inventoryCategories {
-		var indices []int
-		for i, it := range items {
-			if it.Type == cat.Type {
-				indices = append(indices, i)
-			}
-		}
-		if len(indices) == 0 {
-			continue
-		}
-		fmt.Printf("-- %s --\n", cat.Label)
+type inventoryEntry struct {
+	category    string
+	theme       menuTheme
+	label, desc string
+	index       int // position dans l'inventaire
+}
 
+func inventoryEntries(items []Item) []inventoryEntry {
+	var entries []inventoryEntry
+	for _, cat := range inventoryCategories {
 		seen := make(map[string]bool)
-		for _, i := range indices {
-			item := items[i]
-			if seen[item.Name] {
+		for i, item := range items {
+			if item.Type != cat.Type || seen[item.Name] {
 				continue
 			}
 			seen[item.Name] = true
 
 			count := 0
-			for _, j := range indices {
-				if items[j].Name == item.Name {
+			for _, other := range items {
+				if other.Name == item.Name {
 					count++
 				}
 			}
-
 			label := item.Name
 			if count > 1 {
 				label = fmt.Sprintf("%s x%d", item.Name, count)
 			}
-			if desc := itemDescription(item); desc != "" {
-				fmt.Printf("%d. %s — %s\n", num, label, desc)
-			} else {
-				fmt.Printf("%d. %s\n", num, label)
-			}
-			order = append(order, i)
-			num++
+
+			entries = append(entries, inventoryEntry{
+				category: cat.Label,
+				theme:    cat.Theme,
+				label:    label,
+				desc:     itemDescription(item),
+				index:    i,
+			})
 		}
-		fmt.Println()
 	}
-	return order
+	return entries
+}
+
+func inventoryScreen(p *Character, entries []inventoryEntry, sel int) string {
+	labels := []string{"Retour"}
+	for _, e := range entries {
+		labels = append(labels, e.label)
+	}
+	width := maxWidth(labels...)
+
+	lines := []string{fmt.Sprintf("(Emplacements : %d/%d)", len(p.Inventory), p.InventorySize)}
+	category := ""
+	for i, e := range entries {
+		if e.category != category {
+			lines = append(lines, "", "-- "+e.category+" --")
+			category = e.category
+		}
+		line := menuLine(e.label, width, i == sel, e.theme)
+		if e.desc != "" {
+			line += "  \x1b[90m" + e.desc + "\x1b[0m"
+		}
+		lines = append(lines, line)
+	}
+	lines = append(lines, "", menuLine("Retour", width, sel == len(entries), themeGris))
+	return strings.Join(lines, "\n")
 }
 
 func accessInventory(character *Character) {
+	banner, _ := renderImageString(bannerInventaire, bannerWidth)
+	selected := 0
+
 	for {
 		if len(character.Inventory) == 0 {
 			fmt.Println("Inventaire vide.")
-			return
-		}
-
-		clearScreen()
-		displayBanner(bannerInventaire)
-		fmt.Printf("\n(Emplacements : %d/%d)\n\n", len(character.Inventory), character.InventorySize)
-
-		order := displayInventoryByCategory(character.Inventory)
-
-		fmt.Println("0. Retour")
-		fmt.Print("Votre choix : ")
-
-		choice := readInput()
-		if choice == "0" {
-			return
-		}
-		pos, err := strconv.Atoi(choice)
-		if err != nil || pos < 1 || pos > len(order) {
-			fmt.Println("Choix invalide.")
 			pauseForInput()
-			continue
+			return
 		}
 
-		useItem(character, character.Inventory[order[pos-1]])
+		entries := inventoryEntries(character.Inventory)
+		choice := selectMenuFrom(len(entries)+1, selected, func(sel int) string {
+			return banner + "\n" + inventoryScreen(character, entries, sel)
+		})
+		if choice == len(entries) {
+			return
+		}
+		selected = choice
+
+		useItem(character, character.Inventory[entries[choice].index])
 		pauseForInput()
 	}
 }
@@ -218,9 +228,8 @@ func takePot(character *Character) {
 }
 
 func poisonPot(p *Character, damage, ticks int) bool {
-	fmt.Println("⚠️  Cette potion est du poison : elle va vous infliger des dégâts.")
-	fmt.Print("Voulez-vous vraiment la boire ? (oui/non) : ")
-	if readInput() != "oui" {
+	if !confirm("⚠️  Cette potion est du poison : elle va vous infliger des dégâts.",
+		"Voulez-vous vraiment la boire ?") {
 		fmt.Println("Vous rangez la potion.")
 		return false
 	}

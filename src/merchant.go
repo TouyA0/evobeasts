@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -45,31 +44,6 @@ func buyItem(p *Character, item Item) bool {
 	return true
 }
 
-func merchantMenu(p *Character) {
-	items := merchantCatalog()
-
-	for {
-		clearScreen()
-		displayBanner(bannerMerchant)
-		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
-		fmt.Printf("Inventaire : %d/%d\n", len(p.Inventory), p.InventorySize)
-		fmt.Println(strings.Repeat("─", 30))
-		merchantDisplay(items, p.Gold, p)
-
-		fmt.Print("Votre choix : ")
-		choice, err := strconv.Atoi(readInput())
-		if err != nil || choice < 0 || choice > len(items) {
-			fmt.Println("Choix invalide.")
-			pauseForInput()
-			continue
-		}
-		if choice == 0 {
-			return
-		}
-		buyItem(p, items[choice-1])
-		pauseForInput()
-	}
-}
 
 func upgradeInventorySlot(p *Character) bool {
 	if p.UpgradesUsed >= MaxExpansions {
@@ -81,41 +55,94 @@ func upgradeInventorySlot(p *Character) bool {
 	return true
 }
 
-func merchantDisplay(items []Item, gold int, p *Character) {
-	categories := []struct {
-		label string
-		typ   ItemType
-	}{
-		{"Consommables", ItemPotion},
-		{"Matériaux", ItemResource},
-		{"Objets rares", ItemSpellbook},
-		{"Améliorations", ItemUpgrade},
+var merchantCategories = []struct {
+	label string
+	typ   ItemType
+	theme menuTheme
+}{
+	{"Consommables", ItemPotion, themeRouge},
+	{"Matériaux", ItemResource, themeTurquoise},
+	{"Objets rares", ItemSpellbook, themeViolet},
+	{"Améliorations", ItemUpgrade, themeBleu},
+}
+
+// merchantOrder donne les index du catalogue dans l'ordre d'affichage.
+func merchantOrder(items []Item) []int {
+	var order []int
+	for _, cat := range merchantCategories {
+		for i, it := range items {
+			if it.Type == cat.typ {
+				order = append(order, i)
+			}
+		}
+	}
+	return order
+}
+
+func merchantScreen(items []Item, sel int, p *Character) string {
+	const width = 40
+	lines := []string{
+		fmt.Sprintf("\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m", p.Gold),
+		fmt.Sprintf("Inventaire : %d/%d", len(p.Inventory), p.InventorySize),
+		strings.Repeat("─", 30),
 	}
 
-	for _, cat := range categories {
-		printed := false
-		for i, it := range items {
+	pos := 0
+	for _, cat := range merchantCategories {
+		first := true
+		for _, it := range items {
 			if it.Type != cat.typ {
 				continue
 			}
-			if !printed {
-				fmt.Printf("\n-- %s --\n", cat.label)
-				printed = true
+			if first {
+				lines = append(lines, "", "-- "+cat.label+" --")
+				first = false
 			}
-			line := fmt.Sprintf("%d. %-30s (%d or)", i+1, it.Name, it.Price)
+
+			tooExpensive := it.Price > p.Gold
+			theme := cat.theme
+			if tooExpensive {
+				theme = themeGris
+			}
+			line := menuLine(fmt.Sprintf("%-30s (%d or)", it.Name, it.Price), width, pos == sel, theme)
+			if tooExpensive && pos != sel {
+				line = "\x1b[90m" + line + "\x1b[0m"
+			}
+
 			if it.Type == ItemUpgrade {
 				line += fmt.Sprintf("  \x1b[90m[%d/%d utilisées]\x1b[0m", p.UpgradesUsed, MaxExpansions)
 			} else if owned := countItem(p, it.Name); owned > 0 {
 				line += fmt.Sprintf("  \x1b[90m[possédé: x%d]\x1b[0m", owned)
 			}
-			if it.Price > gold {
-				line = "\x1b[90m" + line + "\x1b[0m"
-			}
-			fmt.Println(line)
+			lines = append(lines, line)
+
 			if it.Description != "" {
-				fmt.Printf("   \x1b[90m%s\x1b[0m\n", it.Description)
+				lines = append(lines, "      \x1b[90m"+it.Description+"\x1b[0m")
 			}
+			pos++
 		}
 	}
-	fmt.Println("\n0. Retour")
+
+	lines = append(lines, "", menuLine("Retour", width, sel == pos, themeGris))
+	return strings.Join(lines, "\n")
+}
+
+func merchantMenu(p *Character) {
+	items := merchantCatalog()
+	order := merchantOrder(items)
+	banner, _ := renderImageString(bannerMerchant, bannerWidth)
+	selected := 0
+
+	for {
+		choice := selectMenuFrom(len(order)+1, selected, func(sel int) string {
+			return banner + "\n" + merchantScreen(items, sel, p)
+		})
+		if choice == len(order) {
+			return
+		}
+		selected = choice
+
+		buyItem(p, items[order[choice]])
+		pauseForInput()
+	}
 }

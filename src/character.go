@@ -42,28 +42,34 @@ func characterCreation() *Character {
 	}
 	name = formatName(name)
 
-	fmt.Println("Choisissez votre œuf :")
-	for _, l := range storyEggLines() {
-		fmt.Println(l)
-	}
-	choice := readInput()
-
-	for choice != "1" && choice != "2" && choice != "3" {
-		fmt.Println("Veuillez entrer un nombre valide (1, 2 ou 3) :")
-		choice = readInput()
+	eggs := []struct {
+		label, desc, species string
+		theme                menuTheme
+	}{
+		{"Œuf ardent   — DPS / Feu", "Il est brûlant, comme une braise qui refuse de s'éteindre.", EspecePhenix, themeOrange},
+		{"Œuf immergé  — Tank / Eau", "On entend la marée à l'intérieur.", EspeceKraken, themeBleu},
+		{"Œuf voilé    — Assassin / Spectre", "Vous n'êtes pas certain de l'avoir vraiment vu.", EspeceSpectre, themeViolet},
 	}
 
-	var speciesName string
-	switch choice {
-	case "1":
-		speciesName = EspecePhenix
-	case "2":
-		speciesName = EspeceKraken
-	case "3":
-		speciesName = EspeceSpectre
+	labels := make([]string, len(eggs))
+	for i, e := range eggs {
+		labels[i] = e.label
 	}
+	width := maxWidth(labels...)
 
-	species := speciesByName(speciesName)
+	choice := selectMenu(len(eggs), func(sel int) string {
+		lines := []string{name + ", choisissez votre œuf :", ""}
+		for i, e := range eggs {
+			lines = append(lines,
+				menuLine(e.label, width, i == sel, e.theme),
+				"      \x1b[90m"+e.desc+"\x1b[0m",
+				"")
+		}
+		return strings.Join(lines, "\n")
+	})
+	clearScreen()
+
+	species := speciesByName(eggs[choice].species)
 
 	p := initCharacter(name, species)
 	storyHatch(p)

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -93,14 +92,30 @@ func craftItem(p *Character, r Recipe) bool {
 	return true
 }
 
-func craftDisplay(recipeList []Recipe, p *Character) {
+func craftScreen(recipeList []Recipe, sel int, p *Character) string {
+	labels := []string{"Retour"}
+	for _, r := range recipeList {
+		labels = append(labels, fmt.Sprintf("%s (%d or)", r.Result.Name, r.GoldCost))
+	}
+	width := maxWidth(labels...)
+
+	lines := []string{
+		fmt.Sprintf("\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m", p.Gold),
+		strings.Repeat("─", 30),
+		"",
+	}
+
 	for i, recipe := range recipeList {
 		ok, _ := canCraft(p, recipe)
-		titleLine := fmt.Sprintf("%d. %s (%d or)", i+1, recipe.Result.Name, recipe.GoldCost)
+		theme := themeOrange
 		if !ok {
-			titleLine = "\x1b[90m" + titleLine + "\x1b[0m"
+			theme = themeGris
 		}
-		fmt.Println(titleLine)
+		line := menuLine(labels[i+1], width, i == sel, theme)
+		if !ok && i != sel {
+			line = "\x1b[90m" + line + "\x1b[0m"
+		}
+		lines = append(lines, line)
 
 		bonuses := []string{}
 		if recipe.Result.BonusMaxHP > 0 {
@@ -110,7 +125,7 @@ func craftDisplay(recipeList []Recipe, p *Character) {
 			bonuses = append(bonuses, fmt.Sprintf("+%d Mana", recipe.Result.BonusMaxMana))
 		}
 		if len(bonuses) > 0 {
-			fmt.Printf("   \x1b[36m%s\x1b[0m\n", strings.Join(bonuses, ", "))
+			lines = append(lines, "      \x1b[36m"+strings.Join(bonuses, ", ")+"\x1b[0m")
 		}
 
 		names := make([]string, 0, len(recipe.Materials))
@@ -121,43 +136,35 @@ func craftDisplay(recipeList []Recipe, p *Character) {
 
 		for _, resource := range names {
 			needed := recipe.Materials[resource]
-			line := fmt.Sprintf("   - %d %s", needed, resource)
+			mat := fmt.Sprintf("      - %d %s", needed, resource)
 			if countItem(p, resource) < needed {
-				line = "\x1b[91m" + line + "\x1b[0m"
+				mat = "\x1b[91m" + mat + "\x1b[0m"
 			}
-			fmt.Println(line)
+			lines = append(lines, mat)
 		}
-		fmt.Println()
+		lines = append(lines, "")
 	}
-	fmt.Println("0. Retour")
+
+	lines = append(lines, menuLine("Retour", width, sel == len(recipeList), themeGris))
+	return strings.Join(lines, "\n")
 }
 
 func craftMenu(p *Character) {
 	list := recipes()
+	banner, _ := renderImageString(bannerForge, bannerWidth)
+	selected := 0
 
 	for {
-		clearScreen()
-		displayBanner(bannerForge)
-		fmt.Printf("\n\x1b[38;2;255;215;0mVous avez %d pièces d'or en poche.\x1b[0m\n", p.Gold)
-		fmt.Println(strings.Repeat("─", 30))
-		craftDisplay(list, p)
-		fmt.Print("Votre choix : ")
-
-		choice := readInput()
-		if choice == "0" {
+		choice := selectMenuFrom(len(list)+1, selected, func(sel int) string {
+			return banner + "\n" + craftScreen(list, sel, p)
+		})
+		if choice == len(list) {
 			return
 		}
+		selected = choice
 
-		idx, err := strconv.Atoi(choice)
-		if err != nil || idx < 1 || idx > len(list) {
-			fmt.Println("Choix invalide.")
-			pauseForInput()
-			continue
-		}
-
-		recipe := list[idx-1]
-		ok, reason := canCraft(p, recipe)
-		if !ok {
+		recipe := list[choice]
+		if ok, reason := canCraft(p, recipe); !ok {
 			fmt.Println(reason)
 			pauseForInput()
 			continue
