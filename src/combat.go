@@ -10,33 +10,39 @@ import (
 
 func combatMenu(p *Character) {
 	for {
-		fmt.Println("\n--- Combat ---")
+		clearScreen()
+		displayBanner(bannerCombat)
+
 		unlocked := p.MaxTierDefeated + 1
 		if unlocked > 4 {
 			unlocked = 4
 		}
 		names := []string{MonstreVer, MonstreSanglier, MonstreLoupGarou, MonstreDragonAncien}
+
+		lines := []string{}
 		for i := 1; i <= unlocked; i++ {
-			fmt.Printf("%d. %s\n", i, names[i-1])
+			lines = append(lines, fmt.Sprintf("%d. %s", i, names[i-1]))
 		}
-		fmt.Println("0. Retour")
+		lines = append(lines, "0. Retour")
+		fmt.Print(boxify(lines))
 		fmt.Print("Votre choix : ")
- 
+
 		choice := readInput()
 		if choice == "0" {
 			return
 		}
- 
+
 		tier, err := strconv.Atoi(choice)
 		if err != nil || tier < 1 || tier > unlocked {
 			fmt.Println("Choix invalide.")
+			pauseForInput()
 			continue
 		}
- 
+
 		monster := monsterByTier(tier)
 		storyPreFight(p, tier)
 		trainingFight(p, monster)
- 
+
 		if isGameComplete(p) {
 			storyFinale(p)
 			return
@@ -193,26 +199,26 @@ func runCharacterTurn(p *Character, m *Monster) {
 
 		case "2":
 			fmt.Printf("\033[%dA\033[0J", linesPrinted)
-            linesPrinted = 0
-            used, msg := spellMenu(p, m)
-            if used {
-                return
-            }
-            message = msg
+			linesPrinted = 0
+			used, msg := spellMenu(p, m)
+			if used {
+				return
+			}
+			 message = msg
 
-        case "3":
-            fmt.Printf("\033[%dA\033[0J", linesPrinted)
-            linesPrinted = 0
-            used, msg := combatInventoryMenu(p, m)
-            if used {
-                return
-            }
-            message = msg
+		case "3":
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+			linesPrinted = 0
+			used, msg := combatInventoryMenu(p, m)
+			if used {
+				return
+			}
+			message = msg
 
-        default:
-            message = "Choix invalide. Veuillez entrer un nombre entre 1 et 3."
-        }
-    }
+		default:
+			message = "Choix invalide. Veuillez entrer un nombre entre 1 et 3."
+		}
+	}
 }
 
 func basicAttack(p *Character, m *Monster) {
