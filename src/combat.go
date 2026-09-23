@@ -140,57 +140,59 @@ func checkPlayerDefeat(p *Character) bool {
 	if p.CurrentHP > 0 {
 		return false
 	}
- 
+
 	if hasSpell(p, SortRenaissance) && !p.UltimateUsed {
 		p.UltimateUsed = true
-		p.CurrentHP = p.MaxHP / 2
-		p.Effects = append(p.Effects, StatusEffect{
-			Name: SortRenaissance, TurnsLeft: 3, AttackBuff: 10,
+		p.CurrentHP = p.MaxHP * RenaissanceHPPct / 100
+		p.Effects = applyEffect(p.Effects, StatusEffect{
+			Name: SortRenaissance, TurnsLeft: RenaissanceBuffTurns, AttackBuff: RenaissanceAtkBuff,
 		})
 		fmt.Println("\n🔥 Renaissance ! " + p.Name + " renaît de ses cendres avec " +
 			strconv.Itoa(p.CurrentHP) + " PV et frappe plus fort pour un temps.")
 		return false
 	}
- 
+
 	fmt.Println("\n" + p.Name + " est vaincu...")
 	isDead(p)
 	return true
 }
 
 func runCharacterTurn(p *Character, m *Monster) {
-    if p.SkipNextTurn {
-        fmt.Println(p.Name + " ne peut pas agir ce tour-ci.")
-        p.SkipNextTurn = false
-        return
-    }
+	p.Intangible = false
 
-    message := ""
-    linesPrinted := 0
+	if p.SkipNextTurn {
+		fmt.Println(p.Name + " ne peut pas agir ce tour-ci.")
+		p.SkipNextTurn = false
+		return
+	}
 
-    for {
-        if linesPrinted > 0 {
-            fmt.Printf("\033[%dA\033[0J", linesPrinted)
-        }
+	message := ""
+	linesPrinted := 0
 
-        var b strings.Builder
-        b.WriteString("\n1. Attaquer   2. Sorts   3. Inventaire\n")
-        if message != "" {
-            b.WriteString(message + "\n")
-        }
-        text := b.String()
-        fmt.Print(text)
-        fmt.Print("Votre choix : ")
-        linesPrinted = strings.Count(text, "\n") + 1
+	for {
+		if linesPrinted > 0 {
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		}
 
-        choice := readInput()
+		var b strings.Builder
+		b.WriteString("\n1. Attaquer   2. Sorts   3. Inventaire\n")
+		if message != "" {
+			b.WriteString(message + "\n")
+ 		}
+		text := b.String()
+		fmt.Print(text)
+		fmt.Print("Votre choix : ")
+		linesPrinted = strings.Count(text, "\n") + 1
 
-        switch choice {
-        case "1":
-            basicAttack(p, m)
-            return
+		choice := readInput()
 
-        case "2":
-            fmt.Printf("\033[%dA\033[0J", linesPrinted)
+		switch choice {
+		case "1":
+			basicAttack(p, m)
+			return
+
+		case "2":
+			fmt.Printf("\033[%dA\033[0J", linesPrinted)
             linesPrinted = 0
             used, msg := spellMenu(p, m)
             if used {
@@ -214,7 +216,11 @@ func runCharacterTurn(p *Character, m *Monster) {
 }
 
 func basicAttack(p *Character, m *Monster) {
-	dmg := dealDamage(p.Attack, p.Species.Element, m, false)
+	base := p.Attack + effectiveAttackBonus(p.Effects)
+	if base < 0 {
+		base = 0
+	}
+	dmg := dealDamage(base, p.Species.Element, m, false)
 	printSequential(
 		fmt.Sprintf("%s inflige %d dégâts à %s", p.Name, dmg, m.Name),
 		fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP),
@@ -388,7 +394,7 @@ func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 		}
 		fmt.Printf("%s  Mana : %d/%d\n", p.Name, p.CurrentMana, p.MaxMana)
 	case item.PoisonDamage > 0:
-		m.Effects = append(m.Effects, StatusEffect{
+		m.Effects = applyEffect(m.Effects, StatusEffect{
 			Name: item.Name, TurnsLeft: item.PoisonTicks,
 			DamagePerTurn: item.PoisonDamage,
 		})
@@ -430,7 +436,7 @@ func runMonsterTurn(p *Character, m *Monster, turn int) {
 }
 
 func monsterBasicAttack(p *Character, m *Monster, percent int) {
-	base := m.Attack * percent / 100
+	base := monsterDamage(m, percent)
 	dmg, dodged := dealDamageToPlayer(base, m.Element, p)
 	if dodged {
 		fmt.Printf("%s attaque, %s esquive !\n", m.Name, p.Name)
@@ -438,7 +444,7 @@ func monsterBasicAttack(p *Character, m *Monster, percent int) {
 	}
 	printSequential(
 		fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
-		fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
+		fmt.Sprintf("%s  PV : %d/%d", m.Name, m.CurrentHP, m.MaxHP),
 	)
 }
 
@@ -483,7 +489,7 @@ func loupGarouPattern(p *Character, m *Monster, turn int) {
 		}
 	}
 	if !hasRegen {
-		m.Effects = append(m.Effects, StatusEffect{
+		m.Effects = applyEffect(m.Effects, StatusEffect{
 			Name: "Régénération lunaire", TurnsLeft: PermanentEffectDuration, HealPerTurn: loupGarouRegenHeal,
 		})
 	}
@@ -505,7 +511,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		if turn%2 == 0 {
 			fmt.Println(m.Name + " crache un souffle ardent !")
 			monsterBasicAttack(p, m, dragonSouffleArdentPct)
-			p.Effects = append(p.Effects, StatusEffect{
+			p.Effects = applyEffect(p.Effects, StatusEffect{
 				Name: "Brûlure du Dragon", TurnsLeft: dragonBrulureDuree, DamagePerTurn: dragonBrulureDmg,
 			})
 		} else {
@@ -520,7 +526,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 			}
 		}
 		if !hasRegen {
-			m.Effects = append(m.Effects, StatusEffect{
+			m.Effects = applyEffect(m.Effects, StatusEffect{
 				Name: "Régénération abyssale", TurnsLeft: PermanentEffectDuration, HealPerTurn: dragonRegenAbyssale,
 			})
 		}
@@ -539,7 +545,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 			m.Intangible = true
 		} else {
 			fmt.Println(m.Name + " frappe hors du plan, ignorant tout bouclier !")
-			base := m.Attack * dragonFrappeHorsPlanPct / 100
+			base := monsterDamage(m, dragonFrappeHorsPlanPct)
 			p.Shield = 0 // la frappe ignore le bouclier
 			dmg, dodged := dealDamageToPlayer(base, m.Element, p)
 			if dodged {
@@ -564,7 +570,7 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		default:
 			element = ElementSpectre
 		}
-		base := m.Attack * dragonConvergencePct / 100
+		base := monsterDamage(m, dragonConvergencePct)
 		dmg, dodged := dealDamageToPlayerElement(base, element, p)
 		if dodged {
 			fmt.Println(p.Name + " esquive !")
@@ -584,7 +590,46 @@ func monsterResistance(m *Monster, e Element) float64 {
 	return 1.0
 }
 
+func effectiveAttackBonus(effects []StatusEffect) int {
+	total := 0
+	for _, e := range effects {
+		total += e.AttackBuff
+	}
+	return total
+}
+
+func monsterDamage(m *Monster, percent int) int {
+	atk := m.Attack + effectiveAttackBonus(m.Effects)
+	if atk < 0 {
+		atk = 0
+	}
+	base := atk * percent / 100
+	if len(m.Phases) > 0 {
+		base += base * m.Phases[m.CurrentPhase].DamageBonus / 100
+	}
+	return base
+}
+
+func applyEffect(effects []StatusEffect, e StatusEffect) []StatusEffect {
+	if e.DamagePerTurn == 0 {
+		for i := range effects {
+			if effects[i].Name == e.Name {
+				effects[i] = e
+				return effects
+			}
+		}
+	}
+	return append(effects, e)
+}
+
 func dealDamage(base int, element Element, target *Monster, ignoreResist bool) int {
+	// La Dissolution du dragon lui fait esquiver la prochaine attaque.
+	if target.Intangible {
+		target.Intangible = false
+		fmt.Println(target.Name + " est intangible : l'attaque le traverse sans effet.")
+		return 0
+	}
+
 	mult := 1.0
 	if !ignoreResist {
 		mult = monsterResistance(target, element)
@@ -593,7 +638,7 @@ func dealDamage(base int, element Element, target *Monster, ignoreResist bool) i
 	if amount < 0 {
 		amount = 0
 	}
- 
+
 	if target.Shield > 0 {
 		if target.Shield >= amount {
 			target.Shield -= amount
@@ -603,7 +648,7 @@ func dealDamage(base int, element Element, target *Monster, ignoreResist bool) i
 			target.Shield = 0
 		}
 	}
- 
+
 	target.CurrentHP -= amount
 	if target.CurrentHP < 0 {
 		target.CurrentHP = 0

@@ -90,8 +90,8 @@ func initCharacter(name string, species Species) *Character {
 	p.InventorySize = InventaireBase
 	p.MaxExperience = xpForNextLevel(p.Level)
 
-	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50})
-	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50})
+	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: PrixPotionVie, HealValue: SoinPotionVie})
+	addInventory(p, Item{Name: PotionVie, Type: ItemPotion, Price: PrixPotionVie, HealValue: SoinPotionVie})
 
 	return p
 }
@@ -127,8 +127,8 @@ func isDead(p *Character) bool {
 	}
  
 	if p.Species.Name == EspecePhenix && p.Stage == 4 {
-		p.CurrentHP = p.MaxHP / 2
-		fmt.Println(p.Name + " renaît de ses cendres avec la moitié de ses PV.")
+		p.CurrentHP = p.MaxHP * RenaissanceHPPct / 100
+		fmt.Println(p.Name + " renaît de ses cendres.")
 		return true
 	}
  

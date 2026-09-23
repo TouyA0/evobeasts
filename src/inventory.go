@@ -210,7 +210,7 @@ func takePot(character *Character) {
 		fmt.Println("Vous n'avez pas d'Essence vitale.")
 		return
 	}
-	character.CurrentHP += 50
+	character.CurrentHP += SoinPotionVie
 	if character.CurrentHP > character.MaxHP {
 		character.CurrentHP = character.MaxHP
 	}

@@ -8,20 +8,21 @@ import (
 
 func merchantCatalog() []Item {
 	return []Item{
-		{Name: PotionVie, Type: ItemPotion, Price: 3, HealValue: 50,
-			Description: "Soigne 50 PV instantanément"},
-		{Name: PotionPoison, Type: ItemPotion, Price: 6, PoisonDamage: 10, PoisonTicks: 3,
-			Description: "Inflige 10 dégâts de poison sur 3 tours"},
-		{Name: PotionMana, Type: ItemPotion, Price: 5, ManaValue: 30,
-			Description: "Restaure 30 points de mana"},
-		{Name: GrimoireSoufle, Type: ItemSpellbook, Price: 25, SpellName: SortSoufflePrimordial,
+		{Name: PotionVie, Type: ItemPotion, Price: PrixPotionVie, HealValue: SoinPotionVie,
+			Description: fmt.Sprintf("Soigne %d PV instantanément", SoinPotionVie)},
+		{Name: PotionPoison, Type: ItemPotion, Price: PrixPotionPoison,
+			PoisonDamage: DegatsPotionPoison, PoisonTicks: TicksPotionPoison,
+			Description: fmt.Sprintf("Inflige %d dégâts de poison sur %d tours", DegatsPotionPoison, TicksPotionPoison)},
+		{Name: PotionMana, Type: ItemPotion, Price: PrixPotionMana, ManaValue: ManaPotionMana,
+			Description: fmt.Sprintf("Restaure %d points de mana", ManaPotionMana)},
+		{Name: GrimoireSoufle, Type: ItemSpellbook, Price: PrixGrimoire, SpellName: SortSoufflePrimordial,
 			Description: "Enseigne le sort Souffle primordial"},
-		{Name: ResEcaille, Type: ItemResource, Price: 4},
-		{Name: ResAbyssal, Type: ItemResource, Price: 7},
-		{Name: ResSpectre, Type: ItemResource, Price: 3},
-		{Name: ResPlume, Type: ItemResource, Price: 1},
-		{Name: ExpansionSac, Type: ItemUpgrade, Price: 30,
-			Description: "+10 emplacements d'inventaire"},
+		{Name: ResEcaille, Type: ItemResource, Price: PrixEcaille},
+		{Name: ResAbyssal, Type: ItemResource, Price: PrixAbyssal},
+		{Name: ResSpectre, Type: ItemResource, Price: PrixSpectre},
+		{Name: ResPlume, Type: ItemResource, Price: PrixPlume},
+		{Name: ExpansionSac, Type: ItemUpgrade, Price: PrixExpansion,
+			Description: fmt.Sprintf("+%d emplacements d'inventaire", InventaireBonus)},
 	}
 }
 
@@ -74,7 +75,7 @@ func upgradeInventorySlot(p *Character) bool {
 		fmt.Println("Augmentation max atteinte.")
 		return false
 	}
-	p.InventorySize += 10
+	p.InventorySize += InventaireBonus
 	p.UpgradesUsed++
 	return true
 }

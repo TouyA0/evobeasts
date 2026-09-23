@@ -59,8 +59,38 @@ const (
 	GainPVNiveau      = 5   // PV max gagnés par niveau
 	GainManaNiveau    = 3   // mana max gagné par niveau
 	GainAtkNiveau     = 1   // attaque gagnée par niveau
-	CoutCraft         = 5   // or dépensé par fabrication
+	CoutCraft         = 10   // or dépensé par fabrication
 	PermanentEffectDuration = 9999 // pour un effet qui dure tout le combat
+)
+
+// Valeurs des consommables.
+const (
+	SoinPotionVie      = 30
+	ManaPotionMana     = 25
+	DegatsPotionPoison = 8
+	TicksPotionPoison  = 4
+)
+
+// Prix marchand
+const (
+	PrixPotionVie    = 12
+	PrixPotionMana   = 10
+	PrixPotionPoison = 10
+	PrixGrimoire     = 35
+	PrixExpansion    = 30
+
+	PrixPlume   = 2
+	PrixEcaille = 5
+	PrixSpectre = 4
+	PrixAbyssal = 12
+)
+
+// Valeurs des ultimes
+const (
+	RenaissanceHPPct     = 40 // % des PV max rendus par Renaissance
+	RenaissanceAtkBuff   = 8  // bonus d'attaque accordé par Renaissance
+	RenaissanceBuffTurns = 4  // durée de ce bonus
+	ExecutionFurtiveDmg  = 75 // dégâts de l'Exécution spectrale lancée depuis l'invisibilité
 )
 
 // ÉLÉMENTS

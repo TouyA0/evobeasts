@@ -2,9 +2,9 @@ package main
 
 import "fmt"
 
-// 100 XP au niveau 1, puis +50 par niveau
+// XPPremierNiveau au niveau 1, puis +XPIncrementNiveau par niveau
 func xpForNextLevel(level int) int {
-	return 100 + (level-1)*50
+	return XPPremierNiveau + (level-1)*XPIncrementNiveau
 }
 
 // partagée : appelée à la fin d'un combat

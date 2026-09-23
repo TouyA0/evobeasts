@@ -14,8 +14,8 @@ func recipes() []Recipe {
 				Name:         ArtefactTete,
 				Type:         ItemArtifact,
 				Slot:         SlotHead,
-				BonusMaxHP:   10,
-				BonusMaxMana: 10,
+				BonusMaxHP:   6,
+				BonusMaxMana: 16,
 			},
 			GoldCost: CoutCraft,
 			Materials: map[string]int{
@@ -28,7 +28,7 @@ func recipes() []Recipe {
 				Name:       ArtefactTorse,
 				Type:       ItemArtifact,
 				Slot:       SlotChest,
-				BonusMaxHP: 25,
+				BonusMaxHP: 22,
 			},
 			GoldCost: CoutCraft,
 			Materials: map[string]int{
@@ -41,8 +41,8 @@ func recipes() []Recipe {
 				Name:         ArtefactPieds,
 				Type:         ItemArtifact,
 				Slot:         SlotFeet,
-				BonusMaxHP:   15,
-				BonusMaxMana: 5,
+				BonusMaxHP:   8,
+				BonusMaxMana: 8,
 			},
 			GoldCost: CoutCraft,
 			Materials: map[string]int{

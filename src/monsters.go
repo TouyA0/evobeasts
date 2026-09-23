@@ -6,33 +6,34 @@ import (
 )
 
 const (
-	sanglierChargePct   = 130
-	sanglierStunChance  = 30
+	sanglierChargePct   = 140
+	sanglierStunChance  = 35
 	sanglierEnrage50Pct = 130
 	sanglierEnrage25Pct = 160
 
-	loupGarouHowlBonusAtk = 5
-	loupGarouRegenHeal    = 6
-	loupGarouClawPct      = 70
+	loupGarouHowlBonusAtk = 4
+	loupGarouRegenHeal    = 5
+	loupGarouClawPct      = 65
 
-	dragonSouffleArdentPct   = 120
-	dragonBrulureDmg         = 5
+	dragonSouffleArdentPct   = 125
+	dragonBrulureDmg         = 6
 	dragonBrulureDuree       = 2
-	dragonGriffePct          = 100
-	dragonRegenAbyssale      = 8
-	dragonEtreinteLiquidePct = 80
-	dragonRazDeMareePct      = 120
-	dragonFrappeHorsPlanPct  = 130
-	dragonConvergencePct     = 150
+	dragonGriffePct          = 105
+	dragonRegenAbyssale      = 6
+	dragonEtreinteLiquidePct = 90
+	dragonRazDeMareePct      = 115
+	dragonFrappeHorsPlanPct  = 135
+	dragonConvergencePct     = 135
+	dragonConvergenceBonus   = 30 // bonus de dégâts de la phase finale
 )
 
 func initVer() *Monster {
 	return &Monster{
 		Name:       MonstreVer,
 		Tier:       1,
-		MaxHP:      20,
-		CurrentHP:  20,
-		Attack:     3,
+		MaxHP:      15,
+		CurrentHP:  15,
+		Attack:     4,
 		Initiative: 3,
 		Element:    ElementNeutre,
 		Skills: []MonsterSkill{
@@ -45,9 +46,9 @@ func initVer() *Monster {
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
 		XPReward:   40,
-		GoldReward: 5,
+		GoldReward: 6,
 		LootTable: []LootEntry{
-			{Item: Item{Name: ResPlume, Type: ItemResource, Price: 1}, Chance: 60},
+			{Item: Item{Name: ResPlume, Type: ItemResource, Price: PrixPlume}, Chance: 70},
 		},
 	}
 }
@@ -56,10 +57,10 @@ func initSanglier() *Monster {
 	m := &Monster{
 		Name:       MonstreSanglier,
 		Tier:       2,
-		MaxHP:      45,
-		CurrentHP:  45,
+		MaxHP:      55,
+		CurrentHP:  55,
 		Attack:     7,
-		Initiative: 9,
+		Initiative: 10,
 		Element:    ElementNeutre,
 		Skills: []MonsterSkill{
 			{
@@ -74,9 +75,9 @@ func initSanglier() *Monster {
 			},
 		},
 		XPReward:   90,
-		GoldReward: 12,
+		GoldReward: 15,
 		LootTable: []LootEntry{
-			{Item: Item{Name: ResEcaille, Type: ItemResource, Price: 4}, Chance: 60},
+			{Item: Item{Name: ResEcaille, Type: ItemResource, Price: PrixEcaille}, Chance: 75},
 		},
 	}
 	m.Resistances = map[Element]float64{
@@ -89,10 +90,10 @@ func initLoupGarou() *Monster {
 	return &Monster{
 		Name:       MonstreLoupGarou,
 		Tier:       3,
-		MaxHP:      80,
-		CurrentHP:  80,
-		Attack:     12,
-		Initiative: 13,
+		MaxHP:      90,
+		CurrentHP:  90,
+		Attack:     11,
+		Initiative: 14,
 		Element:    ElementNeutre,
 		Skills: []MonsterSkill{
 			{
@@ -112,10 +113,10 @@ func initLoupGarou() *Monster {
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
 		XPReward:   150,
-		GoldReward: 25,
+		GoldReward: 30,
 		LootTable: []LootEntry{
-			{Item: Item{Name: ResSpectre, Type: ItemResource, Price: 3}, Chance: 50},
-			{Item: Item{Name: ResEcaille, Type: ItemResource, Price: 4}, Chance: 40},
+			{Item: Item{Name: ResSpectre, Type: ItemResource, Price: PrixSpectre}, Chance: 70},
+			{Item: Item{Name: ResEcaille, Type: ItemResource, Price: PrixEcaille}, Chance: 50},
 		},
 	}
 }
@@ -124,22 +125,23 @@ func initDragonAncien() *Monster {
 	return &Monster{
 		Name:       MonstreDragonAncien,
 		Tier:       4,
-		MaxHP:      150,
-		CurrentHP:  150,
-		Attack:     16,
-		Initiative: 15,
-		Element:    ElementFeu, // élément de la phase de départ
+		MaxHP:      230,
+		CurrentHP:  230,
+		Attack:     17,
+		Initiative: 16,
+		Element:    ElementFeu,
 		Resistances: map[Element]float64{
 			ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 		},
 		XPReward:   300,
 		GoldReward: 80,
 		LootTable: []LootEntry{
-			{Item: Item{Name: ResAbyssal, Type: ItemResource, Price: 7}, Chance: 100},
+			{Item: Item{Name: ResAbyssal, Type: ItemResource, Price: PrixAbyssal}, Chance: 100},
 		},
 		CurrentPhase: 0,
 		Phases: []Phase{
 			{
+				// Le dragon est Feu : il résiste au Feu, il craint l'Eau.
 				Name: "Éveil Igné", HPThreshold: 1.0, Element: ElementFeu,
 				Resistances: map[Element]float64{
 					ElementFeu: 0.5, ElementEau: 1.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
@@ -157,9 +159,10 @@ func initDragonAncien() *Monster {
 				},
 			},
 			{
+				// Le dragon est Eau : il résiste à l'Eau, il craint le Spectre.
 				Name: "Vague Ancestrale", HPThreshold: 0.75, Element: ElementEau,
 				Resistances: map[Element]float64{
-					ElementFeu: 1.5, ElementEau: 0.5, ElementSpectre: 1.0, ElementNeutre: 1.0,
+					ElementFeu: 1.0, ElementEau: 0.5, ElementSpectre: 1.5, ElementNeutre: 1.0,
 				},
 				Attacks: []MonsterSkill{
 					{
@@ -177,9 +180,10 @@ func initDragonAncien() *Monster {
 				},
 			},
 			{
+				// Le dragon est Spectre : il résiste au Spectre, il craint le Feu.
 				Name: "Voile Spectral", HPThreshold: 0.50, Element: ElementSpectre,
 				Resistances: map[Element]float64{
-					ElementFeu: 1.0, ElementEau: 1.5, ElementSpectre: 0.5, ElementNeutre: 1.0,
+					ElementFeu: 1.5, ElementEau: 1.0, ElementSpectre: 0.5, ElementNeutre: 1.0,
 				},
 				Attacks: []MonsterSkill{
 					{
@@ -197,12 +201,12 @@ func initDragonAncien() *Monster {
 				Resistances: map[Element]float64{
 					ElementFeu: 1.0, ElementEau: 1.0, ElementSpectre: 1.0, ElementNeutre: 1.0,
 				},
-				DamageBonus: 50,
+				DamageBonus: dragonConvergenceBonus,
 				Attacks: []MonsterSkill{
 					{
 						Name: "Convergence élémentaire", Kind: SkillAttack, DamagePct: dragonConvergencePct,
-						Description: fmt.Sprintf("%d%% dégâts, élément change chaque tour (Feu→Eau→Spectre), +50%% dégâts de phase.",
-							dragonConvergencePct),
+						Description: fmt.Sprintf("%d%% dégâts, élément change chaque tour (Feu→Eau→Spectre), +%d%% dégâts de phase.",
+							dragonConvergencePct, dragonConvergenceBonus),
 					},
 				},
 			},
