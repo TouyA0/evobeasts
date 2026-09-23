@@ -122,7 +122,7 @@ func initLoupGarou() *Monster {
 }
 
 func initDragonAncien() *Monster {
-	return &Monster{
+	m := &Monster{
 		Name:       MonstreDragonAncien,
 		Tier:       4,
 		MaxHP:      230,
@@ -212,6 +212,9 @@ func initDragonAncien() *Monster {
 			},
 		},
 	}
+	m.Element = m.Phases[m.CurrentPhase].Element
+	m.Resistances = m.Phases[m.CurrentPhase].Resistances
+	return m
 }
 
 func monsterByTier(tier int) *Monster {
