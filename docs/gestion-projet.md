@@ -1,220 +1,134 @@
-# EvoBeasts
+# EvoBeasts — Gestion de projet
 
-les branchs git :
-1. celui qui taff sur les personnages : feature/character-base
-2. celui qui taff sur les marchands : feature/merchant
-3. celui qui taff sur les crafts : feature/crafting
-4. celui qui taff sur les combats : feature/combat
+## Les branches
 
-## Fonctionnement git :
-### Étape 1 — Avant de toucher au code, vérifier où on est
- 
-**Toujours commencer une session par `git status`.** Ça affiche sur quelle
-branche vous êtes. Si ce n'est pas votre branche (`feature/mon-module`),
-basculez dessus avant de modifier quoi que ce soit :
- 
-```bash
-git status
-git checkout feature/mon-module
-```
- 
-**Ne codez jamais directement sur `main`.** Si `git status` vous dit que
-vous êtes sur `main`, ne touchez à aucun fichier tant que vous n'avez pas
-fait le `checkout` vers votre branche.
- 
-### Étape 2 — Récupérer les derniers changements avant de coder
- 
-Une fois sur sa branche, on récupère ce que les autres ont pu envoyer sur
-`main` depuis la dernière fois :
- 
-```bash
-git checkout main
-git pull origin main
-git checkout feature/mon-module
-git merge main
-```
- 
-**Faites ça à chaque fois que vous commencez à coder**, même si vous avez
-l'impression que rien n'a changé. Ça évite de travailler sur une base
-périmée et de découvrir un gros conflit trois jours plus tard.
- 
-### Étape 3 — Pendant qu'on code
- 
-On commit souvent, par petits blocs qui fonctionnent, pas un seul énorme
-commit en fin de journée :
- 
-```bash
-git add .
-git commit -m "combat: ajoute le pattern du sanglier"
-git push origin feature/mon-module
-```
- 
-Le message de commit décrit ce qu'on vient de faire, en commençant par le
-domaine (`combat:`, `merchant:`, `craft:`, `character:`).
- 
-**Repassez par l'étape 1 (`git status`) avant chaque nouvelle session**,
-pour être sûr d'être sur la bonne branche avant de modifier quoi que ce
-soit.
- 
-### Étape 4 — Une fois son bout terminé : envoyer vers main
-#### en vrai le mieux serait d'attendre qu'on soit ensemble pour merge sur main comme ça on le fait ensemble proprement.
-```bash
-git checkout main
-git pull origin main
-git checkout feature/mon-module
-git merge main
-```
- 
-Si Git signale un conflit ici, on ne force rien : on regarde ensemble ce
-qui a changé des deux côtés avant de choisir quoi garder.
- 
-Une fois le merge propre, on envoie sur `main` :
- 
-```bash
-git checkout main
-git merge feature/mon-module
-git push origin main
-```
- 
-**Juste après le `git push origin main`, on repart sur sa propre
-branche**, pour ne pas continuer à coder par erreur directement sur
-`main` :
- 
-```bash
-git checkout feature/mon-module
-```
+| Branche | Qui | Domaine |
+|---|---|---|
+| `feature/character-base` | Lucas B | personnage, inventaire |
+| `feature/merchant` | Kelissa | marchand, économie |
+| `feature/crafting` | Lucas H | forgeron, équipement |
+| `feature/combat` | Quentin | combat, ennemis, sorts, évolution, affichage |
+
+Règle : on ne code jamais directement sur `main`. Chacun travaille sur sa
+branche et on merge sur `main` tous ensemble pour régler les conflits
+proprement.
 
 ---
 
-## 1. L'arborescence
+## 1. Le jeu en quelques phrases
+
+La Vallée des Brumes était protégée par trois familles : les Phénix, les
+Krakens et les Caméléons Spectraux. Le Dragon Ancien leur a volé leurs
+éléments et changé leurs gardiens en pierre. Il ne reste que trois œufs.
+
+On incarne l'un d'eux. On le fait évoluer en battant quatre ennemis de plus
+en plus forts, jusqu'au Dragon. À la fin, on choisit de l'épargner ou de
+l'achever, et chaque choix mène à une fin différente.
+
+Combat au tour par tour, en 1 contre 1, dans le terminal.
+
+---
+
+## 2. Lancer le jeu
+
+```bash
+cd src
+go build -o evobeasts.exe
+ouvrir evobeasts.exe
+```
+
+Il faut aussi un terminal qui gère la couleur 24 bits (Windows Terminal,
+le terminal de VS Code).
+
+---
+
+## 3. L'arborescence
 
 ```
 src/
 ├── go.mod
-├── main.go              COMMUN  → menu principal uniquement
-├── types.go             COMMUN  → toutes les structs et constantes
+├── main.go             COMMUN   → lancement + menu principal
+├── types.go            COMMUN   → toutes les structs et constantes
+├── menu.go             COMMUN   → menus au clavier (flèches, Entrée, Échap)
 │
-├── character.go         Membre 2 → création, affichage, stats
-├── inventory.go         Membre 2 → inventaire + fonctions partagées
+├── character.go        Lucas B  → création, fiche perso, stats
+├── inventory.go        Lucas B  → inventaire + fonctions partagées
 │
-├── merchant.go          Membre 3 → boutique
-├── economy.go           Membre 3 → or, XP, niveaux
+├── merchant.go         Kelissa  → boutique
+├── economy.go          Kelissa  → or, XP, niveaux
 │
-├── craft.go             Membre 4 → forgeron
-├── equipment.go         Membre 4 → artefacts équipés
+├── craft.go            Lucas H  → forgeron
+├── equipment.go        Lucas H  → artefacts équipés
 │
-├── combat.go            Quentin → boucle de combat, dégâts, patterns d'ennemis
-├── monsters.go          Quentin → les 4 ennemis + phases du boss
-├── spells.go            Quentin → catalogue de sorts, apprentissage, lancement
-├── evolution.go         Quentin → espèces, paliers, évolutions
-├── layout.go            Quentin → mise en page de l'écran de combat
-├── display.go           Quentin → moteur d'affichage ASCII (générique)
-├── display_egg.go       Quentin → dessin de l'œuf (partagé par les 3 espèces)
-├── display_phoenix.go   Quentin → dessins du Phénix (paliers 2 à 4)
-├── display_kraken.go    Quentin → dessins du Kraken (paliers 2 à 4)
-├── display_spectre.go   Quentin → dessins du Caméléon Spectral (paliers 2 à 4)
-└── display_monsters.go  Quentin → dessins des 4 ennemis (PAS ENCORE FAIT)
+├── combat.go           Quentin  → boucle de combat, dégâts, patterns
+├── combat_screen.go    Quentin  → écran de combat
+├── monsters.go         Quentin  → les 4 ennemis + phases du boss
+├── spells.go           Quentin  → sorts
+├── evolution.go        Quentin  → espèces, paliers, évolutions
+├── imageart.go         Quentin  → affichage des images PNG dans le terminal
+├── images_map.go       Quentin  → quelle image pour quelle créature
+│
+├── story.go            COMMUN   → histoire, choix final, Mémoires
+├── audio.go            COMMUN   → musiques
+├── banners.go          COMMUN   → bannières des menus
+├── title.go            COMMUN   → écran titre
+├── flush_windows.go    COMMUN   → vide le buffer clavier (Windows)
+├── flush_other.go      COMMUN   → version vide pour les autres systèmes
+│
+└── assets/
+    ├── creatures/      les 3 espèces × 4 paliers + les 4 ennemis
+    ├── story/          images des scènes
+    ├── ui/             écran titre + bannières
+    └── audio/          ambiance, combat, boss, gloire
 ```
 
-Un fichier par domaine, comme ça chacun bosse dans les siens et on évite
-les conflits Git. Les deux seuls fichiers communs sont `types.go` (posé
-une fois au départ) et `main.go`, où chacun n'ajoute que son `case` dans
-le switch du menu.
+---
 
-Le détail des fonctions de chaque fichier est en fin de doc (section 12).
+## 4. Qui fait quoi
+
+**Lucas B — le personnage et la base**
+: création du perso, fiche d'infos, inventaire,
+menu, mort, limite d'inventaire.
+
+**Kelissa — l'économie**
+: marchand, prix, or, potion de poison,
+agrandissement de l'inventaire, XP et montée de niveau.
+
+**Lucas H — le craft**
+: forgeron, recettes, équipement, bonus des
+artefacts.
+
+**Quentin — le combat**
+: combat, sorts, les quatre ennemis,
+le boss à quatre phases, l'évolution, l'écran de combat et l'affichage des
+créatures.
 
 ---
 
-## 2. Qui fait quoi
+## 5. Les règles à respecter
 
-**Membre 2 — le personnage et la base**
-Tâches 1 à 6, 8, 11, 12. Il pose la structure du jeu : création du perso,
-affichage des infos, inventaire, menu principal, mort et résurrection,
-limite d'inventaire. Il écrit aussi les fonctions que tout le monde
-utilise.
-**Il est sur le chemin critique** : tant qu'il n'a pas poussé ses
-fonctions, les trois autres ne peuvent pas compiler. Même vides, il faut
-qu'elles existent dès le premier jour.
+### Les stats dérivées passent par `recalculateStats()`
 
-**Membre 3 — l'économie**
-Tâches 7, 9, 13, 14, 18 et Mission 2. Le marchand, les prix, l'or, la
-potion de poison, l'expansion d'inventaire, et tout le système
-d'expérience et de montée en niveau.
-
-**Membre 4 — le craft**
-Tâches 15, 16, 17 et Mission 6. Le forgeron, les recettes, la structure
-Equipment, équiper et déséquiper les artefacts avec les bonus de stats.
-
-**Quentin — le combat et l'univers**
-Tâches 10, 19 à 22, Missions 1, 3 et 4. Toute la partie combat, les
-sorts, les quatre ennemis avec leurs patterns, le boss à quatre phases,
-le système d'évolution et l'affichage ASCII des créatures.
-
----
-
-## 3. Les règles à respecter absolument
-
-Tout est dans `package main`, donc **un seul espace de noms pour tout le
-monde**. Si deux d'entre nous écrivent une fonction `displayMenu`, ça ne
-compile plus. Chacun préfixe donc ses fonctions internes par son domaine :
-`merchantDisplay`, `craftDisplay`, `combatDisplay`.
-
-### Les statistiques dérivées
-
-`MaxHP`, `MaxMana`, `Attack` et `Initiative` sont modifiés par **trois
-sources différentes** : l'évolution (moi), la montée de niveau (membre 3)
-et les artefacts équipés (membre 4).
-
-**Personne n'écrit `player.MaxHP += X`.** On modifie sa source (`Stage`,
-`Level`, `Equipment`), puis on appelle `recalculateStats()` qui recalcule
-tout depuis zéro :
+**Personne n'écrit `p.MaxHP += X`.** On modifie la source (`Stage`, `Level`,
+`Equipment`), puis on appelle `recalculateStats()` qui recalcule tout depuis
+zéro :
 
 ```
 MaxHP = BaseMaxHP
-      + HPPerStage × (Stage − 1)
+      + HPPerStage   × (Stage − 1)
       + GainPVNiveau × (Level − 1)
-      + somme des BonusMaxHP des artefacts équipés
+      + bonus PV des artefacts équipés
 ```
+Pareil pour mana / atk.
 
-Pareil pour le mana et l'attaque. Sans ça, déséquiper un artefact devient
-impossible à calculer correctement et les stats vont dériver.
-
-### Les noms d'objets sont des constantes
-
-Tous les noms sont définis en haut de `types.go` (`ResEcaille`,
-`PotionVie`, `ArtefactTete`...). **Ne comparez jamais avec une chaîne
-écrite en dur** : une apostrophe typographique au lieu d'une droite et le
-craft échoue sans message d'erreur. Pour renommer un objet, on modifie la
-constante, pas les usages.
-
-Depuis l'écriture de `spells.go` et `monsters.go`, ça vaut aussi pour les
-**noms de sorts** (`SortSoufflePrimordial`, `SortRenaissance`,
-`SortExecutionSpectrale`) et les **noms d'ennemis**
-(`MonstreVer`, `MonstreSanglier`, `MonstreLoupGarou`,
-`MonstreDragonAncien`) — toutes définies dans `types.go`.
+### Constantes / struct = types.go
 
 ---
 
-## 4. Le jeu en deux phrases
+## 6. Les deux progressions
 
-On incarne un œuf qui évolue en créature légendaire en battant quatre
-ennemis de plus en plus durs, jusqu'à l'ancêtre commun des trois espèces.
-Combat tour par tour, 1 contre 1, en ligne de commande.
-
-**Contrainte qu'on s'impose : la démo doit tenir en quelques minutes
-devant la classe.** Tous les chiffres sont calibrés pour des combats de
-4 à 6 tours et une partie complète en une dizaine de minutes. Si un
-combat traîne pendant l'oral, on perd le jury.
-
----
-
-## 5. Les deux progressions
-
-On a volontairement séparé deux choses souvent mélangées dans les RPG.
-
-### L'évolution — c'est la trame
-
-Le palier monte à la **première victoire** contre chaque ennemi.
+### L'évolution : le fil de l'histoire
+Le palier monte à la **première victoire** contre chaque ennemi :
 
 | Ennemi battu | Palier atteint |
 |---|---|
@@ -223,482 +137,431 @@ Le palier monte à la **première victoire** contre chaque ennemi.
 | Loup-garou | 4 — Phénix / Kraken / Caméléon Spectral |
 | Dragon Ancien | fin du jeu |
 
-On démarre au palier 1, sous forme d'œuf, et le premier combat c'est
-l'œuf contre le Ver — deux trucs minuscules qui se battent, ça se tient
-narrativement.
+### Le niveau :
+On gagne de l'XP à chaque combat gagné, même contre un ennemi déjà battu. On
+peut donc farmer sans casser l'histoire.
 
-Rejouer un ennemi déjà battu ne fait pas réévoluer.
-
-### Le niveau — c'est le filet de sécurité
-
-L'XP tombe à chaque combat, y compris les combats répétés. Ça permet de
-farmer si on bloque, sans casser la trame des évolutions. C'est aussi la
-Mission 2, donc des points bonus.
-
-- 100 XP pour le niveau 2, puis +50 par niveau (150, 200, 250...)
-- Par niveau : +5 PV max, +3 mana max, +1 attaque
-- L'excédent d'XP est reporté sur le niveau suivant
-
-En battant les quatre ennemis une fois, on arrive vers le niveau 4.
+- 100 XP pour le niveau 2, puis +50 à chaque niveau (150, 200, 250...)
+- Par niveau : +5 PV max, +3 mana max, +1 attaque, et PV/mana remis au max
+- L'XP en trop passe au niveau suivant
 
 ---
 
-## 6. Les trois espèces
-
-### Stats de base (palier 1) et progression par évolution
+## 7. Les trois espèces
 
 | Espèce | Élément | Rôle | PV | PV/palier | Mana | Mana/palier | Atk | Atk/palier | Init | Esquive |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Phénix | Feu | DPS | 50 | +18 | 40 | +15 | 5 | +3 | 12 | 5 % |
-| Kraken | Eau | Tank | 75 | +25 | 30 | +12 | 5 | +2 | 6 | 0 % |
-| Caméléon Spectral | Spectre | Assassin | 45 | +14 | 35 | +15 | 5 | +4 | 18 | 15 % |
+| Phénix | Feu | DPS | 50 | +20 | 44 | +18 | 6 | +3 | 12 | 5 % |
+| Kraken | Eau | Tank | 70 | +25 | 36 | +17 | 6 | +2 | 8 | 5 % |
+| Caméléon Spectral | Spectre | Assassin | 48 | +16 | 32 | +15 | 6 | +4 | 18 | 20 % |
 
-Le rôle est juste indicatif, il n'intervient dans aucun calcul.
-
-Ce que ça donne au palier 4, sans compter les niveaux ni les artefacts :
+Au palier 4 (sans niveaux/artefacts) :
 
 | Espèce | PV max | Mana max | Attaque |
 |---|---|---|---|
-| Phénix | 104 | 85 | 14 |
-| Kraken | 150 | 66 | 11 |
-| Caméléon Spectral | 87 | 80 | 17 |
+| Phénix | 110 | 98 | 15 |
+| Kraken | 145 | 87 | 12 |
+| Caméléon Spectral | 96 | 77 | 18 |
 
-### Résistances
-
-Multiplicateur de dégâts reçus. Sous 1.0 = on encaisse moins.
+### Le triangle des éléments
+**L'Eau bat le Feu, le Feu bat le Spectre, le Spectre bat l'Eau.** Chaque
+espèce résiste à son propre élément et craint celui qui la bat.
+Multiplicateur appliqué aux dégâts reçus :
 
 | Espèce | Feu | Eau | Spectre | Neutre |
 |---|---|---|---|---|
-| Phénix | 0.6 | 1.4 | 1.0 | 1.0 |
-| Kraken | 0.7 | 0.6 | 1.2 | 0.9 |
-| Caméléon Spectral | 1.2 | 1.0 | 0.5 | 1.0 |
+| Phénix | 0.6 | **1.35** | 1.0 | 1.0 |
+| Kraken | 1.0 | 0.6 | **1.35** | 1.0 |
+| Caméléon Spectral | **1.35** | 1.0 | 0.6 | 1.0 |
 
-### Les noms des paliers
-
-| Espèce | Palier 1 | Palier 2 | Palier 3 | Palier 4 |
-|---|---|---|---|---|
-| Phénix | Œuf ardent | Poussin | Poulet | Phénix |
-| Kraken | Œuf immergé | Alevin | Poisson | Kraken |
-| Caméléon Spectral | Œuf voilé | Caméléonneau | Caméléon | Caméléon Spectral |
-
-Au démarrage : PV à 50 % du max (imposé par le sujet, tâche 11), mana
-plein, 100 or, et deux Essences vitales dans le sac pour que le premier
-combat soit jouable.
-
-**Important pour membre 2 :** le palier 1 (l'œuf) est réellement jouable,
-ce n'est pas juste un moment narratif — le tout premier combat contre le
-Ver se joue avec l'œuf, à ses stats de base.
+### Au départ
+- PV à 50 % du max, mana plein
+- 100 or et 2 Essences vitales dans le sac
 
 ---
 
-## 7. Les compétences
+## 8. Les sorts
 
-Chaque sort s'apprend automatiquement à l'évolution correspondante. Au
-palier 1 on n'a que l'attaque de base, c'est normal.
+Au palier 1 on n'a que l'attaque de base, qui prend l'élément de l'espèce.
+Chaque évolution apprend automatiquement les sorts du nouveau palier.
 
-**Les buffs d'attaque s'appliquent aussi aux dégâts des sorts**, pas
-seulement à l'attaque de base.
+**Les buffs d'attaque s'appliquent aussi aux sorts**, pas seulement à
+l'attaque de base.
 
-### Phénix — Feu
-
-| Sort | Palier | Mana | Effet |
-|---|---|---|---|
-| Coup de bec | 1 | 0 | attaque de base |
-| Picorage enflammé | 2 | 8 | 10 dégâts + brûlure 3/tour pendant 2 tours |
-| Plumage chaud | 2 | 6 | rend 12 PV |
-| Coup de bec ardent | 3 | 12 | 22 dégâts |
-| Cocorico enflammé | 3 | 10 | +8 dégâts pendant 3 tours |
-| Griffes de braise | 4 | 15 | 32 dégâts |
-| Nova solaire | 4 | 20 | 18 dégâts + brûlure 6/tour pendant 4 tours |
-| Renaissance (ultime) | 4 | 0 | à la mort : revient à 50 % PV + 10 dégâts bonus, une fois par combat |
-
-### Kraken — Eau
+### Phénix — Feu : brûlures et soins
 
 | Sort | Palier | Mana | Effet |
 |---|---|---|---|
-| Coup de nageoire | 1 | 0 | attaque de base |
-| Éclaboussure | 2 | 6 | 8 dégâts + initiative adverse −5 pendant 2 tours |
-| Écailles naissantes | 2 | 8 | −20 % de dégâts subis pendant 3 tours |
-| Coup de nageoire lourd | 3 | 10 | 16 dégâts + attaque adverse −3 pendant 1 tour |
-| Bulle protectrice | 3 | 12 | bouclier de 25 points |
-| Étreinte tentaculaire | 4 | 18 | 20 dégâts + l'adversaire perd son prochain tour |
-| Raz-de-marée | 4 | 16 | 26 dégâts + initiative adverse −8 pendant 3 tours |
-| Abysse (ultime) | 4 | 25 | 10 dégâts/tour pendant 5 tours |
+| Picorage enflammé | 2 | 8 | 10 dégâts + brûlure 4/tour pendant 2 tours |
+| Plumage chaud | 2 | 8 | rend 24 PV |
+| Coup de bec ardent | 3 | 11 | 24 dégâts |
+| Cocorico enflammé | 3 | 9 | +7 dégâts pendant 4 tours |
+| Griffes de braise | 4 | 15 | 34 dégâts |
+| Nova solaire | 4 | 19 | 16 dégâts + brûlure 7/tour pendant 4 tours |
+| **Renaissance** (ultime) | 4 | — | passif : à la mort, revient à 40 % PV avec +8 d'attaque pendant 4 tours |
 
-### Caméléon Spectral — Spectre
+### Kraken — Eau : encaisser et contrôler
 
 | Sort | Palier | Mana | Effet |
 |---|---|---|---|
-| Morsure | 1 | 0 | attaque de base |
-| Morsure furtive | 2 | 7 | 14 dégâts, doublés si invisible |
-| Camouflage | 2 | 8 | invisible 1 tour, +50 % dégâts à la prochaine attaque |
-| Frappe chromatique | 3 | 12 | 24 dégâts |
-| Voile chromatique | 3 | 10 | invisible 1 tour, +100 % dégâts à la prochaine attaque |
-| Lame spectrale | 4 | 15 | 28 dégâts, ignore les résistances |
-| Dissolution | 4 | 12 | intangible 1 tour : on esquive tout mais on ne peut pas agir |
-| Exécution spectrale (ultime) | 4 | 30 | 60 dégâts depuis l'invisibilité, 25 sinon |
+| Éclaboussure | 2 | 6 | 12 dégâts + initiative adverse −6 pendant 3 tours |
+| Écailles naissantes | 2 | 7 | −30 % de dégâts subis pendant 3 tours |
+| Coup de nageoire lourd | 3 | 11 | 22 dégâts + attaque adverse −4 pendant 3 tours |
+| Bulle protectrice | 3 | 11 | bouclier de 35 |
+| Étreinte tentaculaire | 4 | 17 | 22 dégâts + l'adversaire perd son prochain tour |
+| Raz-de-marée | 4 | 16 | 28 dégâts + initiative adverse −10 pendant 3 tours |
+| **Abysse** (ultime) | 4 | 24 | 13 dégâts/tour pendant 5 tours |
 
-L'invisibilité (Camouflage, Voile chromatique) est un mécanisme
-générique dans le code : le prochain sort offensif lancé pendant qu'on
-est invisible reçoit le bonus stocké, ce qui explique le doublement de
-Morsure furtive sans code spécifique à ce sort.
+### Caméléon Spectral — Spectre : frapper depuis l'invisibilité
+
+| Sort | Palier | Mana | Effet |
+|---|---|---|---|
+| Morsure furtive | 2 | 7 | 15 dégâts |
+| Camouflage | 2 | 11 | invisible : +40 % d'esquive, prochaine attaque +130 % |
+| Frappe chromatique | 3 | 13 | 30 dégâts |
+| Voile chromatique | 3 | 15 | invisible : +40 % d'esquive, prochaine attaque +170 % |
+| Lame spectrale | 4 | 15 | 32 dégâts, ignore les résistances |
+| **Exécution spectrale** (ultime) | 4 | 20 | 35 dégâts, **110** depuis l'invisibilité, ignore les résistances |
+
+Invisibilité : la prochaine attaque, que ce
+soit l'attaque de base ou un sort, prend le bonus puis on redevient visible.
+
+Ignore les résistances : la cible ne peut pas réduire les
+dégâts. Si elle est faible à l'élément, le bonus s'applique quand même.
 
 ### Le sort acheté
+**Souffle primordial** : grimoire à 35 or, 13 mana, 24 dégâts, élément
+neutre. Pas de résistance à l'élément neutre. On peut l'apprendre qu'une fois.
 
-La tâche 10 impose un livre de sort acheté au marchand, donc on en garde
-un en plus des sorts d'évolution :
-
-**Souffle primordial** — grimoire à 25 or, coûte 14 mana, 20 dégâts,
-élément neutre. Achetable dès le début, apprenable une seule fois.
+### Ultimes
+Un seul ultime par combat.
 
 ---
 
-## 8. Les quatre ennemis
+## 9. Les quatre ennemis
 
-| Ennemi | Palier | PV | Atk | Init | Élément | XP | Or | Tours estimés |
-|---|---|---|---|---|---|---|---|---|
-| Ver | 1 | 20 | 3 | 3 | Neutre | 40 | 5 | 4 |
-| Sanglier | 2 | 45 | 7 | 9 | Neutre | 90 | 12 | 4-5 |
-| Loup-garou | 3 | 80 | 12 | 13 | Neutre | 150 | 25 | 5-6 |
-| Dragon Ancien | 4 | 150 | 16 | 15 | les trois | 300 | 80 | 8-10 |
+| Ennemi | Tier | PV | Atk | Init | XP | Or | Loot |
+|---|---|---|---|---|---|---|---|
+| Ver | 1 — Novice | 15 | 4 | 3 | 40 | 6 | Plume calcinée 70 % |
+| Sanglier | 2 — Intermédiaire | 55 | 7 | 10 | 90 | 15 | Fragment d'écaille 75 % |
+| Loup-garou | 3 — Avancé | 90 | 11 | 14 | 150 | 30 | Poussière spectrale 70 %, Fragment d'écaille 50 % |
+| Dragon Ancien | 4 — Boss | 230 | 17 | 16 | 300 | 80 | Éclat abyssal 100 % |
 
-Les trois premiers n'ont aucune résistance particulière (1.0 partout),
-seul le Dragon joue là-dessus.
-
-### Ce qu'ils droppent
-
-En plus d'être achetables au marchand, certaines ressources tombent en
-fin de combat :
-
-| Ennemi | Ressource | Chance |
-|---|---|---|
-| Ver | Plume calcinée | 60 % |
-| Sanglier | Fragment d'écaille | 60 % |
-| Loup-garou | Poussière spectrale | 50 % |
-| Loup-garou | Fragment d'écaille | 40 % |
-| Dragon Ancien | Éclat abyssal | 100 % |
-
-Si le sac est plein, le loot est perdu avec un message clair.
+Trois premiers ennemis : neutres et sans résistances. Seul le dragon joue avec les éléments.
+Si le sac est plein alors le loot est perdu.
 
 ### Leurs patterns
 
-**Ver** — Morsure, 100 % de son attaque, chaque tour. C'est tout, c'est
-le tutoriel.
+**Ver** : morsure à 100 %, tous les tours. C'est le tutoriel.
 
 **Sanglier**
-- Charge un tour sur 3 : 130 % de dégâts, 30 % de chance d'étourdir 1 tour
-- Enragé (passif) : +30 % de dégâts sous 50 % PV, +60 % sous 25 %
-- Les autres tours : attaque simple
+- Charge tous les 3 tours : 140 % + 35 % de chances d'étourdir
+- Enragé : dégâts ×1,3 sous 50 % PV, ×1,6 sous 25 %
 
 **Loup-garou**
-- Griffure enragée un tour sur 2 : deux attaques à 70 % chacune
-- Hurlement au tour 3, une seule fois : +5 d'attaque pour le reste du combat
-- Régénération lunaire : +6 PV en fin de chaque tour
+- Griffure enragée les tours pairs : 2 coups à 65 %
+- Hurlement au tour 3, une seule fois : +4 d'attaque jusqu'à la fin du combat
+- Régénération lunaire : +5 PV par tour
 
-**Dragon Ancien — le boss, quatre phases**
+**Dragon Ancien, le boss en quatre phases**
 
-C'est l'ancêtre commun des trois espèces, né de la fusion corrompue du
-feu, de l'eau et du spectre. Chaque phase exprime un élément, et ses
-résistances changent avec.
+Il change d'élément à chaque phase. **Chaque
+phase a une faiblesse qui correspond à une des trois espèces**, pour que
+tout le monde ait un moment où il domine et un moment où il galère.
 
-| Phase | Déclenche à | Élément | Résiste (Feu/Eau/Spectre) | Ce qu'il fait |
+| Phase | PV | Élément | Feu / Eau / Spectre | Ce qu'il fait |
 |---|---|---|---|---|
-| 1 — Éveil Igné | 100 → 75 % PV | Feu | 0.5 / 1.5 / 1.0 | Souffle ardent (120 % + brûlure), Griffe (100 %) |
-| 2 — Vague Ancestrale | 75 → 50 % PV | Eau | 1.5 / 0.5 / 1.0 | Raz-de-marée (120 %), Étreinte liquide (80 % + perte de tour, 1 tour sur 3), régénère 8 PV/tour |
-| 3 — Voile Spectral | 50 → 25 % PV | Spectre | 1.0 / 1.5 / 0.5 | Frappe hors du plan (130 %, ignore le bouclier), Dissolution (esquive totale 1 tour sur 4) |
-| 4 — Convergence | 25 → 0 % PV | les trois | 1.0 / 1.0 / 1.0 | rotation des trois attaques, +50 % de dégâts |
-
-L'idée : chaque espèce a une phase où elle cartonne et une où elle
-galère. Ça force à s'adapter au lieu de spammer le même sort.
+| 1 — Éveil Igné | 100 → 75 % | Feu | 0.5 / **1.5** / 1.0 | Souffle ardent (125 % + brûlure 6×2) un tour sur deux, sinon Griffe (105 %) |
+| 2 — Vague Ancestrale | 75 → 50 % | Eau | 1.0 / 0.5 / **1.5** | Étreinte liquide (90 % + perte de tour) tous les 3 tours, sinon Raz-de-marée (115 %). Régénère 6 PV/tour |
+| 3 — Voile Spectral | 50 → 25 % | Spectre | **1.5** / 1.0 / 0.5 | Dissolution (esquive la prochaine attaque) tous les 4 tours, sinon Frappe hors du plan (135 %, détruit le bouclier) |
+| 4 — Convergence | 25 → 0 % | les trois | 1.0 / 1.0 / 1.0 | 135 % +30 %, l'élément change à chaque tour (Feu → Eau → Spectre) |
 
 ### Le menu de combat
-
-Le sujet demande juste un combat d'entraînement, mais on fait mieux : un
-menu qui liste les adversaires, débloqués au fur et à mesure. Au départ
-seul le Ver est dispo, chaque victoire ouvre le suivant.
-
-Un ennemi déjà battu reste rejouable pour farmer.
+Chaque victoire déverouille l'ennemi suivant. Les ennemis déjà
+battus restent rejouables pour farmer.
 
 ---
 
-## 9. Le marchand et le forgeron
+## 10. Les règles de combat
 
-### Ce que vend le marchand
+- Celui qui a la plus haute initiative joue en premier. On compte les malus
+  d'initiative, et l'écran indique qui commence.
+- Dégâts = (base + buffs − malus) × résistance de la cible
+- Côté joueur : l'esquive est testée en premier, puis la réduction de
+  dégâts, puis le bouclier, et enfin les PV.
+- Les effets (brûlure, poison, régénération) s'appliquent en fin de tour.
+- Relancer un buff remet sa durée à zéro. Relancer une brûlure la cumule.
+- **Un ennemi qui vient de perdre son tour ne peut pas le reperdre au tour
+  suivant**.
+- Le mana ne remonte pas pendant le combat, sauf avec les Essences de mana.
+- **Victoire** : or, XP, loot, évolution si c'est la première victoire, puis
+  PV et mana remis au max.
+- **Défaite** : le combat s'arrête tout de suite. Un Phénix au
+  palier 4 revient d'abord avec Renaissance. Sinon, `isDead` le remet à
+  **1 PV** et on retourne au menu. Il faut se soigner avant de retenter,
+  ce qui rend les potions utiles.
 
-| Objet | Type | Prix |
-|---|---|---|
-| Essence vitale | potion, +50 PV | 3 or |
-| Essence corrompue | potion de poison, 10 dégâts × 3 ticks | 6 or |
-| Essence de mana | potion, +30 mana | 5 or |
-| Grimoire : Souffle primordial | livre de sort | 25 or |
-| Fragment d'écaille | ressource | 4 or |
-| Éclat abyssal | ressource | 7 or |
-| Poussière spectrale | ressource | 3 or |
-| Plume calcinée | ressource | 1 or |
-| Expansion de besace | +10 places, 3 fois max | 30 or |
+### L'écran de combat
+- l'**intention** de l'ennemi pour le tour (quelle attaque arrive)
+- ses faiblesses et ses résistances actuelles
+- pour le Dragon : les seuils de phase sur la barre de vie
+- la liste de ses compétences, avec leurs pourcentages
+- nos effets actifs, notre bouclier, notre invisibilité et notre ultime
 
-### Le cas de l'Essence corrompue
+Dans le menu des sorts, un sort qu'on ne peut pas lancer s'affiche en rouge
+avec la raison.
 
-La tâche 9 impose une potion qui fait des dégâts avec une seconde entre
-chaque tick (`time.Sleep`). On la rend utile en la faisant dépendre du
-contexte :
+---
 
-- **En combat** : on la balance sur l'ennemi, 10 dégâts × 3 ticks
-  (déjà géré côté combat, dans `combatInventoryMenu`)
-- **Hors combat** : on se l'inflige à soi-même, avec un message
-  d'avertissement et une confirmation avant (à faire par membre 2,
-  dans `inventory.go`)
+## 11. Le marchand et le forgeron
 
-Comme ça on respecte la consigne à la lettre tout en ayant un objet qui
-sert vraiment.
+### Le marchand
 
-### Les artefacts du forgeron
-
-Trois emplacements : tête, torse, pieds. 5 or par fabrication, en plus
-des ressources.
-
-| Artefact | Slot | Ressources | Bonus |
+| Catégorie | Objet | Effet | Prix |
 |---|---|---|---|
-| Diadème des Origines | tête | 1 Plume calcinée + 1 Fragment d'écaille | +10 PV max, +10 mana max |
-| Carapace primordiale | torse | 2 Éclats abyssaux + 1 Fragment d'écaille | +25 PV max |
-| Serres du Voile | pieds | 1 Poussière spectrale + 1 Fragment d'écaille | +15 PV max, +5 mana max |
+| Consommables | Essence vitale | +30 PV | 12 or |
+| | Essence de mana | +25 mana | 10 or |
+| | Essence corrompue | poison, 8 dégâts × 4 | 10 or |
+| Matériaux | Plume calcinée | ressource | 2 or |
+| | Poussière spectrale | ressource | 4 or |
+| | Fragment d'écaille | ressource | 5 or |
+| | Éclat abyssal | ressource | 12 or |
+| Objets rares | Grimoire : Souffle primordial | apprend le sort | 35 or |
+| Améliorations | Expansion de besace | +10 places, 3 fois max | 30 or |
 
-Équiper retire l'objet de l'inventaire. Si le slot est déjà occupé,
-l'ancien revient dans le sac — donc il faut vérifier qu'il reste une
-place libre avant de faire l'échange.
+Ce qu'on ne peut pas payer est grisé. On voit combien on en possède déjà, et
+combien d'expansions ont été utilisées. L'or n'est retiré que si l'achat a
+bien marché.
 
-Les noms sont provisoires, membres 3 et 4 peuvent les changer, mais en
-modifiant les constantes dans `types.go`.
+### L'Essence corrompue
+Le sujet demande une potion qui fait des dégâts avec une seconde entre chaque
+tick. On lui a donné un usage différent selon le moment :
+- **en combat** : on la lance sur l'ennemi, qui prend 8 dégâts par tour
+  pendant 4 tours
+- **hors combat** : on la boit soi-même après une confirmation (« Non » est
+  sélectionné par défaut). On prend 4 ticks de 8 dégâts, une seconde
+  d'écart entre chaque
 
----
+### Le forgeron
+Chaque fabrication coûte 10 or en plus des ressources.
 
-## 10. Les règles de combat et d'inventaire
+| Artefact | Emplacement | Ressources | Bonus |
+|---|---|---|---|
+| Diadème des Origines | tête | 1 Plume calcinée + 1 Fragment d'écaille | +6 PV, +16 mana |
+| Carapace primordiale | torse | 2 Éclats abyssaux + 1 Fragment d'écaille | +22 PV |
+| Serres du Voile | pieds | 1 Poussière spectrale + 1 Fragment d'écaille | +8 PV, +8 mana |
 
-### Combat
-
-- Celui qui a la plus haute initiative commence le tour, malus
-  d'initiative actifs compris (fonction `effectiveInitiative`)
-- Dégâts = (base + buffs − malus) × résistance de la cible à l'élément
-- L'esquive se teste avant chaque attaque reçue
-- Le bouclier absorbe avant les PV
-- Intangible = on esquive tout mais on ne peut pas agir
-- Les effets se résolvent en fin de tour et perdent un tour de durée
-- **PV et mana remis à fond après chaque combat gagné.** On ne veut pas
-  d'une gestion de ressources entre les combats, ça rallongerait la démo
-  pour rien
-- Le mana ne remonte pas pendant un combat, seulement avec les Essences
-  de mana
-- **À 0 PV en combat, le combat s'arrête immédiatement et renvoie au
-  menu** (tâche 22.2) — sauf le Phénix qui, avec Renaissance non encore
-  utilisée, revient à 50 % PV et continue le même combat. Dans tous les
-  autres cas de défaite, `isDead` (tâche 8, membre 2) sert de filet de
-  sécurité pour ramener le joueur à 50 % de ses PV max avant de le
-  renvoyer au menu, plutôt que de le laisser bloqué à 0 PV
-
-### Inventaire
-
-- Les doublons prennent des places distinctes : trois Essences vitales =
-  trois places sur dix
-- 10 places au départ, extensible trois fois de +10, donc 40 max
-- Toute fonction qui ajoute un objet vérifie la place et affiche une
-  erreur explicite si c'est plein
+On équipe depuis l'inventaire. Si l'emplacement est déjà pris, l'ancien
+artefact revient dans le sac. Il y a forcément une place libre, puisque le
+nouvel artefact vient d'en sortir.
 
 ---
 
-## 11. Mission 6 — les deux artistes cachés
+## 12. L'inventaire
 
-Les titres des tâches sont des références.
+- Chaque exemplaire prend sa propre place : trois Essences vitales occupent
+  trois places. À l'affichage, elles sont regroupées en « x3 ».
+- 10 places au départ, +10 trois fois, soit 40 maximum
+- Les objets sont rangés par catégorie : Potions, Grimoires, Artefacts,
+  Ressources
+- Toute fonction qui ajoute un objet vérifie d'abord s'il reste de la place
 
-- **Partie 2** : *Money, money, money*, *Two for the Price of One*,
-  *Gimme! Gimme! Gimme!*, *I saw it in the mirror*, *Mamma Mia*,
-  *On and on and on* → des chansons d'**ABBA**
+---
+
+## 13. L'expérience de jeu
+
+- **Menus au clavier** : ↑/↓ (ou ←/→) pour se déplacer, Entrée pour valider,
+  Échap pour revenir, chiffres comme raccourcis, Ctrl+C pour quitter.
+- **Buffer clavier vidé** avant chaque menu (sous Windows)
+- **Images** : les créatures, les ennemis, les scènes et les bannières sont
+  des PNG affichés directement dans le terminal en blocs colorés. Chaque
+  palier de chaque espèce a son image.
+- **Musique** : ambiance, combat, boss et gloire (générique).
+- **Histoire** : prologue, une scène avant et après chaque premier combat,
+  une phrase à chaque évolution, puis le choix final :
+  - **Épargner** → *Fin I — La Clémence* : les gardiens se réveillent,
+    mais le Dragon dort toujours sous la montagne
+  - **Achever** → *Fin II — La Rancune* : la vallée est sauvée, mais les
+    gardiens meurent avec le Dragon
+- **Mémoires de la vallée** : un menu pour relire les scènes déjà vues.
+
+---
+
+## 14. Mission 6 — les deux artistes cachés
+
+Menu « Qui sont-ils ? » :
+- **Partie 2** : *Money, money, money*, *Gimme! Gimme! Gimme!*,
+  *Mamma Mia*... → **ABBA**
 - **Partie 3** : *Duel*, *A.I. Intelligence artificielle*,
-  *Ready Player One*, *Fighter Squad* → des films de **Steven Spielberg**
-
-À revérifier avant de le mettre dans le jeu, mais ça colle bien.
+  *Ready Player One*... → **Steven Spielberg**
 
 ---
 
-## 12. Les fonctions par fichier
+## 15. Les fonctions par fichier
 
-Aperçu de ce que chacun a à écrire. Les fonctions marquées **partagée**
-sont appelées par d'autres modules : leur nom et leur signature ne
-changent pas sans prévenir tout le monde.
+Les fonctions marquées **partagée** sont utilisées par d'autres fichiers :
+on ne change pas leur nom ni leur signature sans prévenir tout le monde.
 
 ### main.go — commun
-
-| Fonction | Ce qu'elle fait |
+| Fonction | Rôle |
 |---|---|
-| `main()` | lance la création du perso puis le menu |
-| `mainMenu(p *Character)` | boucle du menu principal, un `case` par module |
+| `main()` | écran titre, prologue, création du perso, menu |
+| `mainMenu(p)` | menu principal, un `case` par module |
 
 ### types.go — commun
+Aucune fonction. Uniquement les structs (`Character`, `Species`, `Spell`,
+`Item`, `Equipment`, `Recipe`, `LootEntry`, `StatusEffect`, `Monster`,
+`MonsterSkill`, `Phase`) et toutes les constantes.
 
-Aucune fonction, uniquement les structs (`Character`, `Monster`, `Item`,
-`Spell`, `Species`, `Equipment`, `Recipe`, `StatusEffect`, `Phase`,
-`LootEntry`, `CreatureArt`) et les constantes de noms et de règles.
-
-### character.go — Membre 2
-
-| Fonction | Ce qu'elle fait |
+### menu.go — commun
+| Fonction | Rôle |
 |---|---|
-| `characterCreation() *Character` | demande le nom et l'espèce, renvoie le perso prêt |
-| `initCharacter(...) *Character` | construit un Character à partir des valeurs de base |
-| `formatName(s string) string` | majuscule au début, reste en minuscules |
-| `displayInfo(p *Character)` | fiche du perso, appelle `displayCreature(p.Species.Name, p.Stage)` |
-| `recalculateStats(p *Character)` | **partagée** — recalcule MaxHP, MaxMana, Attack depuis zéro |
-| `isDead(p *Character) bool` | **partagée** — vérifie 0 PV, ressuscite à 50 % |
-| `readInput() string` | **partagée** — lecture clavier nettoyée |
+| `selectMenu` / `selectMenuFrom` / `selectMenuHint` | **partagée** — menu plein écran au clavier |
+| `inlineSelect(...)` | **partagée** — menu sous l'écran actuel (utilisé en combat) |
+| `confirm(lines...) bool` | **partagée** — question Oui / Non |
+| `button` / `backButton` | **partagée** — bouton qui attend Entrée |
+| `menuLine`, `menuLines`, `maxWidth` | mise en forme des lignes de menu |
 
-⚠️ `displayCreature` attend le **nom** de l'espèce (`p.Species.Name`,
-une string), pas la struct `Species` entière.
-
-### inventory.go — Membre 2
-
-| Fonction | Ce qu'elle fait |
+### character.go — Lucas B
+| Fonction | Rôle |
 |---|---|
-| `accessInventory(p *Character)` | affiche l'inventaire, permet d'utiliser un objet |
-| `addInventory(p *Character, item Item) bool` | **partagée** — ajoute si place, sinon `false` |
-| `removeInventory(p *Character, name string) bool` | **partagée** — retire une occurrence |
-| `countItem(p *Character, name string) int` | **partagée** — compte les occurrences |
-| `hasSpace(p *Character) bool` | **partagée** — reste-t-il une place ? |
-| `useItem(p *Character, item Item)` | applique l'effet d'un objet hors combat |
-| `takePot(p *Character)` | potion de vie, +50 PV plafonnés au max |
+| `characterCreation() *Character` | demande le nom et l'œuf |
+| `isLettersOnly(s) bool` | vérifie que le nom ne contient que des lettres |
+| `formatName(s) string` | première lettre en majuscule, le reste en minuscules |
+| `initCharacter(name, species)` | construit le perso de départ |
+| `recalculateStats(p)` | **partagée** — recalcule MaxHP, MaxMana, Attack |
+| `isDead(p) bool` | **partagée** — gère le 0 PV |
+| `readInput() string` | **partagée** — lecture clavier |
+| `displayInfo(p)` | fiche perso : image, stats, équipement, sorts |
 
-### merchant.go — Membre 3
-
-| Fonction | Ce qu'elle fait |
+### inventory.go — Lucas B
+| Fonction | Rôle |
 |---|---|
-| `merchantMenu(p *Character)` | boucle du menu boutique |
-| `merchantCatalog() []Item` | la liste de tout ce qui est vendu |
-| `buyItem(p *Character, item Item)` | vérifie l'or et la place, débite, ajoute |
-| `upgradeInventorySlot(p *Character)` | +10 places, 3 fois maximum |
-| `merchantDisplay(items []Item)` | affiche le catalogue avec les prix |
+| `addInventory(p, item) bool` | **partagée** — ajoute si place, sinon `false` |
+| `removeInventory(p, name) bool` | **partagée** — retire un exemplaire |
+| `countItem(p, name) int` | **partagée** — compte les exemplaires |
+| `hasSpace(p) bool` | **partagée** — reste-t-il une place ? |
+| `accessInventory(p)` | écran d'inventaire |
+| `inventoryEntries(items)` | regroupe par catégorie et par nom |
+| `itemDescription(item)` | texte d'effet d'un objet |
+| `useItem(p, item)` | utilise un objet hors combat |
+| `usePotion(p, item)` | effet d'une potion |
+| `poisonPot(p, dmg, ticks) bool` | boire l'Essence corrompue, avec confirmation |
+| `takePot(p)` | potion de vie (tâche du sujet, pas reliée au menu) |
 
-Pour le grimoire, utiliser `learnSpell(p, SortSoufflePrimordial)`
-(fonction de `spells.go`, voir plus bas) — jamais la chaîne écrite en dur.
-
-### economy.go — Membre 3
-
-| Fonction | Ce qu'elle fait |
+### merchant.go — Kelissa
+| Fonction | Rôle |
 |---|---|
-| `gainXP(p *Character, amount int)` | **partagée** — ajoute l'XP, gère les montées de niveau |
-| `gainGold(p *Character, amount int)` | **partagée** — ajoute l'or |
-| `levelUp(p *Character)` | +5 PV, +3 mana, +1 atk, reporte l'excédent d'XP |
-| `xpForNextLevel(level int) int` | 100 puis +50 par niveau |
+| `merchantMenu(p)` | boucle de la boutique |
+| `merchantCatalog() []Item` | tout ce qui est vendu |
+| `buyItem(p, item) bool` | vérifie l'or et la place, puis retire l'or |
+| `upgradeInventorySlot(p) bool` | +10 places, 3 fois maximum |
+| `merchantOrder`, `merchantScreen` | classement par catégorie et affichage |
 
-### craft.go — Membre 4
-
-| Fonction | Ce qu'elle fait |
+### economy.go — Kelissa
+| Fonction | Rôle |
 |---|---|
-| `craftMenu(p *Character)` | boucle du menu forgeron |
-| `recipes() []Recipe` | les trois recettes d'artefacts |
-| `canCraft(p *Character, r Recipe) bool` | vérifie l'or, les ressources et la place |
-| `craftItem(p *Character, r Recipe)` | consomme les matériaux, ajoute l'artefact |
-| `craftDisplay(recipes []Recipe)` | affiche les recettes et ce qu'il manque |
-| `showArtists()` | Mission 6, affiche ABBA et Spielberg |
+| `gainXP(p, amount)` | **partagée** — ajoute l'XP et gère les niveaux |
+| `gainGold(p, amount)` | **partagée** — ajoute l'or |
+| `levelUp(p)` | monte d'un niveau, recalcule les stats, soigne |
+| `xpForNextLevel(level) int` | 100, puis +50 par niveau |
 
-### equipment.go — Membre 4
-
-| Fonction | Ce qu'elle fait |
+### craft.go — Lucas H
+| Fonction | Rôle |
 |---|---|
-| `equipItem(p *Character, item Item) bool` | équipe, remet l'ancien au sac, appelle `recalculateStats` |
-| `unequipItem(p *Character, slot EquipSlot) bool` | déséquipe si place dispo |
-| `equipmentBonus(e Equipment) (hp int, mana int)` | somme des bonus, utilisée par `recalculateStats` |
-| `equipmentDisplay(e Equipment)` | affiche les trois emplacements |
+| `craftMenu(p)` | boucle du forgeron |
+| `recipes() []Recipe` | les trois recettes |
+| `canCraft(p, r) (bool, string)` | vérifie or, ressources et place, et donne la raison si c'est non |
+| `craftItem(p, r) bool` | consomme les ressources et ajoute l'artefact |
+| `craftScreen(...)` | affiche les recettes et ce qui manque |
+| `showArtists()` | Mission 6 |
 
----
+### equipment.go — Lucas H
+| Fonction | Rôle |
+|---|---|
+| `equipItem(p, item) bool` | équipe, remet l'ancien dans le sac, recalcule les stats |
+| `unequipItem(p, slot) bool` | retire un artefact s'il y a de la place (pas relié au menu) |
+| `equipmentBonus(e) (hp, mana)` | somme des bonus, utilisée par `recalculateStats` |
+| `equipmentDisplay(e)` | affiche les trois emplacements |
 
 ### combat.go — Quentin
-
-| Fonction | Ce qu'elle fait |
+| Fonction | Rôle |
 |---|---|
-| `combatMenu(p *Character)` | menu qui liste les ennemis débloqués, lance `trainingFight` |
-| `trainingFight(p *Character, m *Monster)` | boucle principale : ordre de jeu via initiative, appelle les tours, `resolveEffects`, gère fin de combat |
-| `checkPlayerDefeat(p *Character) bool` | gère la mort du joueur : déclenche Renaissance si dispo, sinon fin de combat + `isDead` |
-| `runCharacterTurn(p *Character, m *Monster)` | menu du joueur : Attaquer / Sorts / Inventaire |
-| `basicAttack(p *Character, m *Monster)` | attaque de base, élément = celui de l'espèce du joueur |
-| `spellMenu(p *Character, m *Monster)` | liste les sorts connus, lance celui choisi via `castSpell` |
-| `combatInventoryMenu(p *Character, m *Monster)` | inventaire en combat ; potion de poison jetée sur l'ennemi ici |
-| `announcePhaseChange(m *Monster)` | affiche le message si `updatePhase` signale un changement |
-| `runMonsterTurn(p *Character, m *Monster, turn int)` | aiguille vers le pattern du bon ennemi |
-| `monsterBasicAttack(p *Character, m *Monster, percent int)` | attaque à X % de l'attaque du monstre, affiche le format imposé (tâche 20) |
-| `verPattern`, `sanglierPattern`, `loupGarouPattern`, `dragonPattern` | le comportement propre à chaque ennemi, tour par tour |
-| `monsterResistance(m *Monster, e Element) float64` | résistance d'un monstre à un élément, 1.0 par défaut |
-| `dealDamage(base int, element Element, target *Monster, ignoreResist bool) int` | dégâts joueur → monstre, renvoie le montant réel après résistance/bouclier |
-| `dealDamageToPlayer(base int, element Element, p *Character) (int, bool)` | raccourci de `dealDamageToPlayerElement` |
-| `dealDamageToPlayerElement(base int, element Element, p *Character) (int, bool)` | dégâts monstre → joueur : esquive, résistance, réduction, bouclier |
-| `effectiveInitiative(base int, effects []StatusEffect) int` | initiative après malus actifs |
-| `resolveEffects(p *Character, m *Monster)` | applique DoT/régén sur les deux, décrémente les durées |
-| `tickEffects(...)` | fonction générique utilisée par `resolveEffects` |
-| `endFight(p *Character, m *Monster, won bool)` | or, XP, loot, évolution, restaure PV/mana |
+| `combatMenu(p)` | liste des ennemis débloqués |
+| `trainingFight(p, m)` | boucle du combat : ordre de jeu, tours, effets, fin |
+| `checkPlayerDefeat(p) bool` | Renaissance, sinon défaite + `isDead` |
+| `runCharacterTurn(p, m)` | Attaquer / Sorts / Inventaire |
+| `basicAttack(p, m)` | attaque de base, avec l'élément de l'espèce |
+| `spellMenu`, `spellMenuText` | choix du sort, sorts impossibles en rouge |
+| `combatInventoryMenu(p, m)` | potions en combat, poison lancé sur l'ennemi |
+| `runMonsterTurn(p, m, turn)` | choisit le pattern du bon ennemi |
+| `verPattern`, `sanglierPattern`, `loupGarouPattern`, `dragonPattern` | comportement de chaque ennemi |
+| `monsterBasicAttack(p, m, pct)` | attaque à X % (format imposé, tâche 20) |
+| `monsterDamage(m, pct)` | dégâts ennemis avec buffs et bonus de phase |
+| `dealDamage(...)` | dégâts joueur → ennemi |
+| `dealDamageToPlayerElement(...)` | dégâts ennemi → joueur |
+| `applyEffect(...)` | ajoute un effet (un buff est rafraîchi, un DoT se cumule) |
+| `effectiveInitiative`, `effectiveAttackBonus` | stats avec les effets actifs |
+| `resolveEffects`, `tickEffects` | effets de fin de tour |
+| `announcePhaseChange(m)` | message + phrase d'histoire au changement de phase |
+| `endFight(p, m, won)` | or, XP, loot, évolution, soin complet |
+| `printSequential`, `autoAdvance`, `pauseForInput` | rythme de l'affichage |
+
+### combat_screen.go — Quentin
+| Fonction | Rôle |
+|---|---|
+| `combatScreen(p, m, turn, playerFirst)` | assemble tout l'écran de combat |
+| `enemyIntentText`, `predictMonsterSkillName` | prochaine action de l'ennemi |
+| `resistanceLines`, `nextPhaseHint`, `phaseThresholds` | infos tactiques |
+| `healthBar(...)` | **partagée** — barre `[████░░░░] 52/80` |
+| `boxify`, `dividedColumns`, `centerText` | **partagée** — cadre et colonnes |
+| `visibleWidth`, `padRight`, `truncateVisible` | largeur réelle à l'écran (accents, emojis, couleurs) |
+| `clearScreen()` | **partagée** — efface le terminal |
+| `slotName(item)` | nom de l'artefact équipé, ou `—` |
 
 ### monsters.go — Quentin
-
-| Fonction | Ce qu'elle fait |
+| Fonction | Rôle |
 |---|---|
-| `initVer() *Monster` | 20 PV, attaque 3, drop Plume calcinée à 60 % |
-| `initSanglier() *Monster` | 45 PV, attaque 7, drop Fragment d'écaille à 60 % |
-| `initLoupGarou() *Monster` | 80 PV, attaque 12, drop Poussière spectrale (50 %) et Fragment d'écaille (40 %) |
-| `initDragonAncien() *Monster` | 150 PV, ses 4 phases avec seuils et résistances |
-| `monsterByTier(tier int) *Monster` | renvoie un ennemi neuf correspondant au palier |
-| `updatePhase(m *Monster) string` | fait progresser le Dragon vers sa phase suivante selon ses PV restants, renvoie un message si ça change de phase |
-| `rollLoot(m *Monster) []Item` | tire chaque ressource de la table de loot indépendamment |
+| `initVer`, `initSanglier`, `initLoupGarou`, `initDragonAncien` | les 4 ennemis |
+| `monsterByTier(tier)` | nouvel ennemi selon le tier |
+| `updatePhase(m) string` | fait passer le Dragon à la phase suivante |
+| `rollLoot(m) []Item` | tire chaque ressource de la table de loot |
 
 ### spells.go — Quentin
-
-| Fonction | Ce qu'elle fait |
+| Fonction | Rôle |
 |---|---|
-| `allSpells() []Spell` | catalogue complet, tous sorts + le grimoire |
-| `spellsForStage(s Species, stage int) []Spell` | sorts débloqués À CE PALIER EXACTEMENT (pas les précédents) |
-| `spellByName(name string) (Spell, bool)` | cherche un sort par son nom dans le catalogue |
-| `hasSpell(p *Character, name string) bool` | le personnage connaît-il déjà ce sort ? |
-| `learnSpell(p *Character, name string) bool` | **partagée** — ajoute un sort, `false` si déjà connu ou inconnu du catalogue |
-| `canCastSpell(p *Character, spell Spell) (bool, string)` | vérifie mana et ultime déjà utilisé, renvoie un message d'erreur explicite |
-| `castSpell(p *Character, m *Monster, spell Spell) (string, bool)` | applique tous les effets du sort, gère l'invisibilité générique et le cas spécial d'Exécution spectrale |
+| `allSpells()` | tous les sorts |
+| `spellsForStage(s, stage)` | sorts débloqués à ce palier précis |
+| `spellByName`, `hasSpell` | recherche |
+| `learnSpell(p, name) bool` | **partagée** — apprend un sort |
+| `canCastSpell(p, spell)` | vérifie le mana et l'ultime, avec un message |
+| `castSpell(p, m, spell)` | applique tous les effets du sort |
 
 ### evolution.go — Quentin
-
-| Fonction | Ce qu'elle fait |
+| Fonction | Rôle |
 |---|---|
-| `allSpecies() []Species` | les 3 espèces avec toutes leurs stats de base et leur progression |
-| `speciesByName(name string) Species` | récupère une espèce par son nom |
-| `canEvolve(p *Character, defeatedTier int) bool` | première victoire contre ce palier ET pas déjà au palier 4 |
-| `evolve(p *Character)` | incrémente le palier, recalcule les stats, restaure PV/mana, apprend les nouveaux sorts |
-| `currentStageName(p *Character) string` | raccourci sûr pour le nom du palier actuel |
-| `getResistance(s Species, e Element) float64` | résistance d'une espèce à un élément, 1.0 par défaut |
-| `isGameComplete(p *Character) bool` | le Dragon Ancien a-t-il été vaincu ? |
-| `onEvolve(p *Character, previousStageName string) string` | message "X devient Y !" — voir note ci-dessous |
+| `allSpecies()`, `speciesByName(name)` | les 3 espèces |
+| `canEvolve(p, tier) bool` | première victoire et pas encore au palier 4 |
+| `evolve(p)` | palier +1, stats, soin, nouveaux sorts |
+| `currentStageName(p)`, `onEvolve(...)` | nom du palier et message « X devient Y ! » |
+| `getResistance(s, e)` | résistance d'une espèce |
+| `isGameComplete(p)` | le Dragon est-il vaincu ? |
 
-### layout.go — Quentin
-
-Composition de l'écran de combat : ennemi centré en haut avec sa barre
-de vie, séparateur, joueur à gauche avec ses stats à droite.
-
-| Fonction | Ce qu'elle fait |
+### imageart.go / images_map.go — Quentin
+| Fonction | Rôle |
 |---|---|
-| `clearScreen()` | efface le terminal avant de redessiner |
-| `visibleWidth(s string) int` | compte les caractères affichés (pas les octets — important à cause des accents) |
-| `padRight(s string, width int) string` | complète une ligne avec des espaces |
-| `center(s string, width int) string` | centre une ligne |
-| `sideBySide(left, right string, leftWidth, gap int) string` | colle deux blocs de texte côte à côte |
-| `healthBar(current, max, width int) string` | barre `[████░░░░] 52/80` |
-| `separator() string` | ligne `───` |
-| `fitArt(art string, maxWidth, maxHeight int) string` | tronque un dessin trop grand pour le cadre de combat |
-| `artToString(art string, colors [][3]int, width int) string` | rend un art coloré en string (pour le combiner avant affichage) |
-| `combatScreen(p *Character, m *Monster, turn int)` | assemble et affiche l'écran de combat complet |
-| `slotName(item *Item) string` | nom d'un artefact équipé, ou `—` si vide |
+| `displayImage(path, width) bool` | affiche un PNG dans le terminal |
+| `renderImageString(path, width)` | même chose sous forme de string, pour la placer dans un écran |
+| `speciesImagePath(name, stage)` | image d'une espèce à un palier |
+| `monsterImagePath(name)` | image d'un ennemi |
 
-### display.go — Quentin
-
-| Élément | Ce que c'est |
+### story.go, audio.go, banners.go, title.go — commun
+| Fonction | Rôle |
 |---|---|
-| `CreatureArt` (struct) | associe un dessin à son dégradé de couleurs (une couleur par ligne) |
-| `speciesArts`, `monsterArts` (maps) | remplies par les fichiers `display_*.go` via leurs `init()` |
-| `printArt(art string, colors [][3]int)` | affiche un dessin coloré, pleine taille (utilisé pour la fiche perso) |
-| `displayCreature(speciesName string, stage int)` | **partagée** — affiche le dessin d'une espèce à un palier donné |
-| `displayMonster(name string)` | affiche le dessin d'un ennemi |
-
-### display_egg.go, display_phoenix.go, display_kraken.go, display_spectre.go — Quentin
-
-### display_monsters.go — Quentin
+| `storyPrologue`, `storyPreFight`, `storyPostFight`, `storyEvolve` | scènes d'histoire |
+| `storyFinale`, `storyChoiceScreen` | choix Épargner / Achever |
+| `storyEndingClemence`, `storyEndingRancune`, `storyCredits` | les deux fins + générique |
+| `storyJournal()` | Mémoires de la vallée |
+| `playMusic(path)`, `stopMusic()` | musique en boucle |
+| `displayBanner(path)` | bannière d'un menu |
+| `displayTitleScreen()` | écran titre |
