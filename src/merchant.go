@@ -112,6 +112,9 @@ func merchantDisplay(items []Item, gold int, p *Character) {
 				line = "\x1b[90m" + line + "\x1b[0m"
 			}
 			fmt.Println(line)
+			if it.Description != "" {
+				fmt.Printf("   \x1b[90m%s\x1b[0m\n", it.Description)
+			}
 		}
 	}
 	fmt.Println("\n0. Retour")
