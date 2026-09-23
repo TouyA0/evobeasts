@@ -67,7 +67,7 @@ func writeImageQuadrant(w io.Writer, src image.Image, width int) {
 
 			writeQuadrantCell(w, tl, tr, bl, br)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprint(w, "\x1b[0m\x1b[K\n")
 	}
 }
 
@@ -96,8 +96,13 @@ func writeQuadrantCell(w io.Writer, tl, tr, bl, br rgbColor) {
 	}
 
 	fg, bg := splitColors(corners, bestMask)
+	glyph := quadrantGlyphs[bestMask]
+	if bestMask == 0 {
+		glyph = '█'
+		fg = bg
+	}
 	fmt.Fprintf(w, "\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm%c\x1b[0m",
-		fg.r, fg.g, fg.b, bg.r, bg.g, bg.b, quadrantGlyphs[bestMask])
+		fg.r, fg.g, fg.b, bg.r, bg.g, bg.b, glyph)
 }
 
 func splitColors(corners [4]rgbColor, mask int) (fg, bg rgbColor) {
