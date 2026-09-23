@@ -751,7 +751,9 @@ func tickEffects(effects []StatusEffect, applyDamage func(int), applyHeal func(i
 		if e.HealPerTurn > 0 {
 			applyHeal(e.HealPerTurn)
 		}
-		if e.TurnsLeft > 1 {
+		if e.TurnsLeft >= PermanentEffectDuration {
+			remaining = append(remaining, e)
+		} else if e.TurnsLeft > 1 {
 			e.TurnsLeft--
 			remaining = append(remaining, e)
 		}
