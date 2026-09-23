@@ -14,6 +14,7 @@ const (
 	musicAmbiance = "assets/musique_ambiance.mp3"
 	musicCombat   = "assets/musique_combat.mp3"
 	musicBoss     = "assets/musique_boss.mp3"
+	musicGloire   = "assets/musique_gloire.mp3"
 )
 
 const baseSampleRate beep.SampleRate = 44100

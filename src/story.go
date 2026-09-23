@@ -668,6 +668,7 @@ func storyEndingRancune(p *Character) {
 }
 
 func storyCredits(p *Character) {
+	playMusic(musicGloire)
 	clearScreen()
 	storyHeader("EVOBEASTS")
 
