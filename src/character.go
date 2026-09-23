@@ -72,7 +72,7 @@ func characterCreation() *Character {
 	species := speciesByName(eggs[choice].species)
 
 	p := initCharacter(name, species)
-	storyHatch(p)
+	storyCoquille(p)
 	return p
 }
 

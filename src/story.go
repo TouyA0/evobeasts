@@ -15,6 +15,8 @@ const (
 )
 
 const (
+	imgTaniere		 = "assets/story/taniere.png"
+	imgValleeBrumes  = "assets/story/vallee_brumes.png"
 	imgVallee        = "assets/story/vallee_ruines.png"
 	imgTroisOeufs    = "assets/story/trois_oeufs.png"
 	imgDragonVaincu  = "assets/story/dragon_vaincu.png"
@@ -22,6 +24,12 @@ const (
 	imgFinClemence   = "assets/story/fin_clemence.png"
 	imgFinRancune    = "assets/story/fin_rancune.png"
 )
+
+var storyPhaseLines = map[string]string{
+	"Vague Ancestrale": "L'eau des Krakens ruisselle de ses écailles.",
+	"Voile Spectral":   "Il disparaît dans le voile des Caméléons.",
+	"Convergence":      "Il appelle les trois à la fois. Ses écailles se fendent.",
+}
 
 var storySeen = map[string]bool{}
 var storyLog []storyBeat
@@ -57,6 +65,17 @@ func storyOnce(key string) bool {
 	}
 	storySeen[key] = true
 	return true
+}
+
+func bySpecies(p *Character, phenix, kraken, spectre string) string {
+	switch p.Species.Name {
+	case EspeceKraken:
+		return kraken
+	case EspeceSpectre:
+		return spectre
+	default:
+		return phenix
+	}
 }
 
 func playBeat(b storyBeat) {
@@ -112,28 +131,56 @@ func storyPrologue() {
 	playBeat(storyBeat{
 		Key:   "prologue",
 		Title: "LA VALLÉE DES BRUMES",
-		Image: imgVallee,
+		Image: imgValleeBrumes,
 		Pages: [][]string{
 			{
-				"À l'écart du monde, il existe une vallée que les cartes n'ont",
-				"jamais nommée.",
+				"À l'écart du monde, il existe une vallée qu'aucune carte n'a jamais",
+				"nommée.",
 				"Ceux qui y vivaient l'appelaient la Vallée des Brumes.",
 			},
 			{
-				"Trois familles s'y partageaient le silence.",
+				"Trois familles y régnaient en maîtres.",
 				"",
 				"  Les Phénix, qui ne connaissaient pas la mort.",
-				"  Les Krakens, qui régnaient sur les profondeurs.",
-				"  Les Caméléons Spectraux, que personne n'a jamais vus venir.",
+				"  Les Krakens, qui gouvernaient les profondeurs.",
+				"  Les Caméléons Spectraux, que personne ne voyait jamais venir.",
 			},
 			{
-				"Puis quelque chose de très ancien s'est retourné dans son sommeil.",
+				"La brume, c'était eux.",
 				"",
-				"Le Dragon Ancien est remonté. Il n'a pas rugi, il n'a pas menacé.",
-				"Il a simplement pris.",
+				"Le souffle des Phénix sur les eaux des Krakens, et le voile des",
+				"Caméléons pour cacher la vallée au reste du monde.",
+			},
+			{
+				"Sous la montagne dormait une créature plus vieille que la vallée :",
+				"le Dragon Ancien.",
 				"",
-				"Quand la brume est retombée, la vallée n'était plus qu'un champ",
-				"de ruines.",
+				"Il n'avait aucun élément à lui. Il volait celui des autres.",
+				"",
+				"Une nuit, il se réveilla.",
+			},
+		},
+	})
+
+	playBeat(storyBeat{
+		Key:   "prologue-dragon",
+		Title: "LA NUIT DU DRAGON",
+		Image: imgVallee,
+		Pages: [][]string{
+			{
+				"Il ravagea la vallée.",
+				"",
+				"Il arracha aux trois familles ce qui les faisait vivre : leur feu,",
+				"leur eau, leur voile.",
+				"",
+				"Puis il redescendit sous la montagne, et les trois gardiens",
+				"disparurent avec lui.",
+				"Personne ne sait ce qu'il en a fait.",
+			},
+			{
+				"Sans ceux qui la faisaient naître, la brume changea.",
+				"Elle devint grise, épaisse, et rendit malade tout ce qui la",
+				"respirait.",
 			},
 		},
 	})
@@ -144,12 +191,16 @@ func storyPrologue() {
 		Image: imgTroisOeufs,
 		Pages: [][]string{
 			{
-				"Il n'a rien laissé derrière lui. Rien, sauf trois œufs.",
+				"Il ne laissa derrière lui que quelques bêtes… et trois œufs,",
+				"derniers vestiges des grandes familles.",
 				"",
-				"Trois œufs qui ne portaient encore aucun élément, et qu'il n'a",
-				"donc pas vus.",
+				"Trois œufs dont l'élément dormait encore, demeurés invisibles",
+				"à ses yeux.",
+			},
+			{
+				"Aujourd'hui, dans le silence, l'un d'eux se met à trembler…",
 				"",
-				"L'un d'eux vient de bouger.",
+				"C'est ainsi que commence l'histoire des Evobeasts.",
 			},
 		},
 	})
@@ -160,7 +211,7 @@ func storyPrologue() {
 // ═══════════════════════════════════════════════════════════════════════
 
 func storyNamePrompt() string {
-	return "Un nom remonte des cendres de la vallée. Lequel ?"
+	return "Dans l'un de ces œufs, quelque chose attend un nom. Lequel ?"
 }
 
 func storyEggLines() []string {
@@ -174,40 +225,58 @@ func storyEggLines() []string {
 	}
 }
 
-func storyHatch(p *Character) {
+func storyCoquille(p *Character) {
+	playBeat(storyBeat{
+		Key:   "coquille",
+		Title: "LA COQUILLE",
+		Image: speciesImagePath(p.Species.Name, 1),
+		Pages: [][]string{{
+			bySpecies(p,
+				"Une fissure rougeoie. Un filet de fumée s'en échappe.",
+				"Une fissure s'ouvre. Un filet d'eau s'en échappe.",
+				"Une fissure apparaît. Disparaît. Réapparaît."),
+			"",
+			"Pas assez pour sortir. Pas encore.",
+			"",
+			"Vous avez faim, et personne ne viendra.",
+			"",
+			"Et dehors, quelque chose gratte contre la coquille.",
+		}},
+	})
+}
+
+func storyEclosion(p *Character) {
 	var hatch []string
 
 	switch p.Species.Name {
-	case EspecePhenix:
-		hatch = []string{
-			"La coquille ne se brise pas : elle se consume.",
-			p.Name + " respire pour la première fois, et l'air a un goût de fumée.",
-		}
 	case EspeceKraken:
 		hatch = []string{
 			"La coquille se fend, et l'eau qu'elle contenait se répand sans bruit.",
-			p.Name + " ouvre les yeux dans le noir. Le noir ne le gêne pas.",
+			p.Name + " ouvre les yeux dans le noir. Ses yeux sont faits pour ça.",
 		}
 	case EspeceSpectre:
 		hatch = []string{
 			"Personne n'a vu la coquille s'ouvrir.",
-			p.Name + " était simplement là, comme s'il y avait toujours été.",
+			p.Name + " était simplement là, comme depuis toujours.",
 		}
 	default:
-		hatch = []string{"La coquille se fend."}
+		hatch = []string{
+			"La coquille ne se brise pas : elle se consume.",
+			p.Name + " respire pour la première fois, et l'air a un goût de fumée.",
+		}
 	}
 
 	playBeat(storyBeat{
 		Key:   "eclosion",
 		Title: "ÉCLOSION",
-		Image: speciesImagePath(p.Species.Name, 1),
+		Image: speciesImagePath(p.Species.Name, 2),
 		Pages: [][]string{
 			hatch,
 			{
-				"Vous êtes faible. Vous êtes seul.",
+				"Un peu plus loin, les deux autres œufs sont vides.",
+				"D'autres que vous ont survécu, quelque part dans la brume.",
 				"",
-				"Et quelque part, très loin sous la vallée, quelque chose digère",
-				"ce qu'il vous a pris.",
+				"La faim vous envahit.",
 			},
 		},
 	})
@@ -228,12 +297,22 @@ func storyPreFight(p *Character, tier int) {
 			Key:   "pre-1",
 			Title: "PREMIÈRE SORTIE",
 			Image: monsterImagePath(MonstreVer),
-			Pages: [][]string{{
-				"Un ver de terre.",
-				"",
-				"Vous avez survécu au Dragon Ancien, et votre premier adversaire",
-				"est un ver de terre.",
-			}},
+			Pages: [][]string{
+				{
+					"Un ver de terre.",
+					"",
+					"Vous avez survécu au Dragon Ancien, et votre premier adversaire",
+					"est un ver de terre.",
+					"",
+					"Il faut bien commencer quelque part.",
+				},
+				{
+					"Ce ver n'est que le premier.",
+					"La vallée est pleine de bêtes que la brume a rendues folles.",
+					"",
+					"Pour survivre, vous allez devoir les affronter…",
+				},
+			},
 		})
 
 	case 2:
@@ -242,10 +321,10 @@ func storyPreFight(p *Character, tier int) {
 			Title: "CE QUI RESTE DES VIVANTS",
 			Image: monsterImagePath(MonstreSanglier),
 			Pages: [][]string{{
-				"La bête a les yeux voilés de blanc.",
+				"Au loin, une bête aux yeux brûlants de fièvre.",
 				"",
-				"Elle n'est pas hostile : elle est malade. Ce que le Dragon a",
-				"réveillé s'est répandu dans tout ce qui vivait ici.",
+				"Elle n'est pas hostile, mais malade. La brume est entrée en elle,",
+				"comme dans tout ce qui vit encore ici.",
 				"",
 				"Elle ne vous laissera pas passer pour autant.",
 			}},
@@ -256,14 +335,20 @@ func storyPreFight(p *Character, tier int) {
 			Key:   "pre-3",
 			Title: "LE TÉMOIN",
 			Image: monsterImagePath(MonstreLoupGarou),
-			Pages: [][]string{{
-				"Il parle.",
-				"",
-				"Ce qui sort de sa gueule n'a plus grand-chose d'un langage,",
-				"mais il parle.",
-				"",
-				"Il vivait ici, avant.",
-			}},
+			Pages: [][]string{
+				{
+					"Autrefois, c'était un loup. Il gardait l'entrée de la vallée pour",
+					"les trois familles.",
+					"",
+					"La brume l'a changé plus que les autres.",
+				},
+				{
+					"Il parle.",
+					"",
+					"Ce qui sort de sa gueule n'a plus grand-chose d'un langage,",
+					"mais il parle.",
+				},
+			},
 		})
 
 	case 4:
@@ -277,30 +362,38 @@ func storyPreDragon(p *Character) {
 	playBeat(storyBeat{
 		Key:   "pre-4",
 		Title: "LA TANIÈRE ANCESTRALE",
+		Image: imgTaniere,
+		Pages: [][]string{{
+			"À l'entrée de la tanière, deux silhouettes.",
+			"",
+			"Les deux autres œufs. Ils ont grandi, eux aussi.",
+			"Ils sont arrivés avant vous. Ils ont essayé.",
+			"Leurs blessures disent le reste.",
+			"",
+			"Sans un mot, ils s'écartent pour vous laisser passer.",
+		}},
+	})
+
+	playBeat(storyBeat{
+		Key:   "pre-4-dragon",
+		Title: "LE DRAGON ANCIEN",
 		Image: monsterImagePath(MonstreDragonAncien),
 		Pages: [][]string{
 			{
-				"Deux silhouettes vous attendent à l'entrée de la tanière.",
-				"",
-				"Les deux autres œufs. Ils ont grandi eux aussi.",
-				"Aucun des trois ne dit un mot. Ce n'est pas nécessaire.",
-				"",
-				"En bas, il vous attend.",
-			},
-			{
-				"Le Dragon Ancien ne possède pas d'élément.",
-				"Il copie ceux des autres, et il ne les rend jamais.",
-				"",
-				"Mais il a une limite : il ne peut en contenir que trois.",
+				"Ils ont appris une chose en perdant :",
+				"le Dragon se bat avec ce qu'il a volé.",
 				"",
 				"        Feu.        Eau.        Spectre.",
 				"",
-				"Trois éléments arrachés à trois créatures qui, quelque part sous",
-				"vos pattes, respirent encore sans savoir pourquoi.",
+				bySpecies(p,
+					"Il va vous attaquer avec la flamme de votre famille.",
+					"Il va vous attaquer avec la marée de votre famille.",
+					"Il va vous attaquer avec le voile de votre famille."),
 			},
 			{
-				"Quand il n'aura plus le choix, il essaiera de porter les trois",
-				"à la fois.",
+				"Mais trois éléments, c'est trop, même pour lui.",
+				"",
+				"Quand il sera acculé, il essaiera de les porter tous à la fois.",
 				"",
 				"C'est à ce moment-là qu'il se brisera.",
 			},
@@ -322,24 +415,17 @@ func storyPostFight(p *Character, tier int) {
 
 	switch tier {
 	case 1:
-		playBeat(storyBeat{
-			Key:   "post-1",
-			Title: "SOUS LA PEAU",
-			Pages: [][]string{{
-				"Ce n'était rien.",
-				"",
-				"Mais vous sentez quelque chose bouger sous votre peau.",
-			}},
-		})
+		storyEclosion(p)
 
 	case 2:
 		playBeat(storyBeat{
 			Key:   "post-2",
 			Title: "UNE ÉCAILLE ÉTRANGÈRE",
 			Pages: [][]string{{
-				"Sur son flanc, une écaille qui n'est pas la sienne.",
+				"Plantée dans son flanc, une écaille noire.",
+				"Bien trop grande pour venir d'une bête de la vallée.",
 				"",
-				"Vous la reconnaissez sans savoir pourquoi.",
+				"Quelque chose d'énorme est passé par ici.",
 			}},
 		})
 
@@ -353,15 +439,16 @@ func storyPostFight(p *Character, tier int) {
 					"Il ne cherche plus à se relever.",
 				},
 				{
-					"« Je les ai vus. Tes vieux. Les trois.",
+					"« Je te reconnais. Tu as l'odeur de ta famille.",
 					"",
-					"  Il ne les a pas tués — il les a vidés. Il leur a pris ce qui",
-					"  les tient debout, et il est reparti sous la montagne avec.",
+					"  J'étais là, la nuit où il est remonté. Il n'a pas tué les",
+					"  gardiens : il leur a arraché leur élément, et ils se sont",
+					"  changés en pierre.",
 					"",
-					"  Ils sont encore en bas. Encore en vie, si on peut appeler",
-					"  ça vivre.",
+					"  Il les a traînés sous la montagne, dans sa tanière.",
+					"  Ils respirent encore.",
 					"",
-					"  Le sort tient tant qu'il tient, lui. »",
+					"  Tant qu'il vit, ce qu'il leur a pris existe encore. »",
 				},
 				{
 					"Il ne dit plus rien.",
@@ -382,12 +469,11 @@ func storyEvolve(p *Character) {
 
 	switch p.Stage {
 	case 2:
-		line = "Quelque chose se réveille dans " + p.Name + ". Ce n'est pas encore un nom."
+		line = "L'élément qui dormait dans l'œuf vient de s'éveiller."
 	case 3:
 		line = "La vallée commence à reconnaître ce que " + p.Name + " est en train de devenir."
 	case 4:
-		line = p.Name + " n'a plus besoin qu'on lui dise ce qu'il est. Il est " +
-			currentStageName(p) + "."
+		line = p.Name + " porte désormais le nom de sa famille : " + currentStageName(p) + "."
 	default:
 		return
 	}
@@ -415,26 +501,35 @@ func storyFinale(p *Character) {
 			"Il ne peut plus se relever.",
 			"",
 			"Trois lueurs s'échappent de ses plaies et flottent au-dessus de",
-			"lui, sans tomber.",
-			"Une rouge. Une bleue. Une qui n'a pas de couleur.",
+			"lui. Une rouge. Une bleue. Une qui n'a pas de couleur.",
 		}},
 	})
 
 	playBeat(storyBeat{
 		Key:   "finale-parents",
-		Title: "TROIS CORPS DE PIERRE",
+		Title: "TROIS STATUES",
 		Image: imgParentsPierre,
 		Pages: [][]string{
 			{
-				"Au fond de la salle, trois corps de pierre.",
+				"Au fond de la tanière, trois statues : un Phénix, un Kraken,",
+				"un Caméléon. Les trois gardiens.",
+				"Parmi eux, celui de votre famille.",
+				"",
 				"Ils respirent, très lentement.",
+			},
+			{
+				"Les deux autres vous ont rejoint. Ils se tournent vers vous :",
+				"c'est vous qui l'avez fait tomber.",
 				"",
 				"Le Dragon vous regarde. Il ne supplie pas.",
 			},
 			{
-				"« Si tu m'achèves, ce que je leur ai pris meurt avec moi.",
+				"« Je ne peux plus les porter.",
 				"",
-				"  Si tu me laisses, je le rends, et je me rendors.",
+				"  Laisse-moi vivre, et je les rends. Puis je retourne dormir.",
+				"",
+				"  Achève-moi, et ce que je leur ai pris meurt avec moi.",
+				"  Eux aussi.",
 				"",
 				"  Choisis. Je n'ai plus rien à voler. »",
 			},
@@ -455,33 +550,25 @@ func storyChoiceScreen() string {
 
 	leftBody := []string{
 		"",
-		"  Il perd son sort draconique.",
-		"  Les trois éléments retournent",
-		"  à leurs porteurs.",
-		"",
-		"  Tes parents se réveillent.",
-		"",
-		"  Il se rendort.",
-		"  Et un jour, il se réveillera.",
+		"  Il rend ce qu'il a volé.",
+		"  Les gardiens se réveillent.",
+		"  Il retourne dormir.",
+		"  Un jour, il se réveillera.",
 		"",
 		"  ──────────────────────────────",
-		"  Tu leur rends leur vie.",
-		"  Tu ne leur rends pas justice.",
+		"  Vous sauvez votre famille.",
+		"  Vous laissez vivre la menace.",
 	}
 	rightBody := []string{
 		"",
-		"Il ne se relèvera plus jamais.",
-		"Les trois éléments s'éteignent",
-		"avec lui.",
-		"",
-		"Tes parents ne se réveillent pas.",
-		"",
-		"Plus jamais personne ne prendra",
-		"rien à ta famille.",
+		"Il ne se relèvera jamais.",
+		"Ce qu'il a volé meurt avec lui.",
+		"Les gardiens ne se réveilleront pas.",
+		"Plus rien ne menacera la vallée.",
 		"",
 		"──────────────────────────────",
-		"Tu leur rends justice.",
-		"Tu ne leur rends pas leur vie.",
+		"Vous protégez la vallée.",
+		"Vous perdez votre famille.",
 	}
 
 	// Titre de colonne : barre de couleur si sélectionné, texte coloré sinon.
@@ -495,7 +582,7 @@ func storyChoiceScreen() string {
 	choice := selectMenuHint(2, 0, menuHintSide, func(sel int) string {
 		left := strings.Join(append([]string{"  " + header("ÉPARGNER", sel == 0, themeVert)}, leftBody...), "\n")
 		right := strings.Join(append([]string{header("ACHEVER", sel == 1, themeRouge)}, rightBody...), "\n")
-		return "\n" + centerText("\x1b[1mQUE FAIS-TU ?\x1b[0m", totalWidth) + "\n\n" +
+				return "\n" + centerText("\x1b[1mQUE FAITES-VOUS ?\x1b[0m", totalWidth) + "\n\n" +
 			dividedColumns(left, right, storyColWidth)
 	})
 
@@ -516,20 +603,25 @@ func storyEndingClemence(p *Character) {
 			{
 				"Le Dragon incline la tête.",
 				"",
-				"Ce n'est pas de la soumission, c'est autre chose — quelque chose",
+				"Ce n'est pas de la soumission. C'est autre chose, quelque chose",
 				"qui ressemble à de la gratitude, chez une créature qui n'a jamais",
 				"eu de mot pour ça.",
 			},
 			{
-				"Les trois lueurs redescendent.",
+				"Les trois lueurs redescendent, chacune vers sa statue.",
 				"La pierre se fend. Trois souffles.",
 				"",
-				"Il se traîne jusqu'au fond de sa tanière ancestrale, et se rendort.",
-				"",
-				"Personne ne saura jamais combien de temps.",
+				"Les gardiens ouvrent les yeux sur trois enfants qu'ils n'ont",
+				"jamais vus éclore.",
 			},
 			{
-				"Trois familles se relèveront dans la Vallée des Brumes.",
+				"Le Dragon se traîne au fond de sa tanière, et se rendort.",
+				"Personne ne sait pour combien de temps.",
+			},
+			{
+				"Dehors, la brume redevient blanche.",
+				"",
+				"Trois grandes familles se relèveront dans la Vallée des Brumes.",
 				"",
 				"Et trois enfants dormiront mal, chaque nuit, en écoutant la",
 				"montagne.",
@@ -540,7 +632,6 @@ func storyEndingClemence(p *Character) {
 
 func storyEndingRancune(p *Character) {
 	// Pas de musique sur cette fin
-
 	playBeat(storyBeat{
 		Key:   "fin-2",
 		Title: "FIN II — LA RANCUNE",
@@ -554,21 +645,23 @@ func storyEndingRancune(p *Character) {
 			},
 			{
 				"Dans la salle, la pierre se fend quand même.",
-				"Trois souffles — courts.",
+				"Trois souffles, très courts.",
 				"",
-				"Ils ont juste le temps de vous voir.",
-				"C'est probablement mieux ainsi.",
+				"Les gardiens ouvrent les yeux juste assez longtemps pour voir",
+				"leurs enfants, debout.",
+				"",
+				"Puis ils les referment. Pour de bon.",
 			},
 			{
 				p.Name + " et les deux autres remontent à la surface.",
 				"Ils ne se retournent pas.",
 				"",
-				"Trois familles se relèveront dans la Vallée des Brumes, et à leur",
-				"tête se tiendront trois créatures que plus personne ne prendra",
-				"jamais pour des œufs.",
+				"Au-dessus de la vallée, une brume nouvelle se lève.",
+				"La leur, cette fois.",
 				"",
-				"Elles n'ont rien pardonné. Elles n'ont rien oublié.",
-				"Et c'est très bien comme ça.",
+				"Trois grandes familles se relèveront dans la Vallée des Brumes.",
+				"Et plus rien, jamais, ne descendra de la montagne pour les leur",
+				"prendre.",
 			},
 		},
 	})

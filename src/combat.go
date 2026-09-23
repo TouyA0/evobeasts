@@ -421,6 +421,9 @@ func announcePhaseChange(m *Monster) {
 	}
 	if msg := updatePhase(m); msg != "" {
 		fmt.Println(msg)
+		if line, ok := storyPhaseLines[m.Phases[m.CurrentPhase].Name]; ok {
+			fmt.Println("\x1b[38;2;200;180;255m" + line + "\x1b[0m")
+		}
 	}
 }
 
