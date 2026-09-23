@@ -34,13 +34,23 @@ func isLettersOnly(s string) bool {
 }
 
 func characterCreation() *Character {
-	fmt.Println(storyNamePrompt())
+	clearScreen()
+	storyHeader("TROIS ŒUFS")
+	displayImage(imgTroisOeufs, storyArtWidth)
+	fmt.Println()
+	storyPrint(storyNamePrompt())
+	fmt.Print("> ")
+
 	name := readInput()
 	for !isLettersOnly(name) {
 		fmt.Println("Le nom ne doit contenir que des lettres. Réessayez :")
+		fmt.Print("> ")
 		name = readInput()
 	}
 	name = formatName(name)
+
+	// Nouvelle page pour le choix de l'œuf.
+	clearScreen()
 
 	eggs := []struct {
 		label, desc, species string
