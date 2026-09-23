@@ -353,12 +353,49 @@ func spellMenu(p *Character, m *Monster) (bool, string) {
 	}
 }
 
+func combatInventoryDisplay(b *strings.Builder, items []Item) []Item {
+	var display []Item
+	num := 1
+	for _, cat := range inventoryCategories {
+		seen := make(map[string]bool)
+		for _, it := range items {
+			if it.Type != cat.Type || seen[it.Name] {
+				continue
+			}
+			if it.HealValue <= 0 && it.ManaValue <= 0 && it.PoisonDamage <= 0 {
+				continue
+			}
+			seen[it.Name] = true
+
+			count := 0
+			for _, other := range items {
+				if other.Name == it.Name {
+					count++
+				}
+			}
+
+			label := it.Name
+			if count > 1 {
+				label = fmt.Sprintf("%s x%d", it.Name, count)
+			}
+			if desc := itemDescription(it); desc != "" {
+				b.WriteString(fmt.Sprintf("%d. %s — %s\n", num, label, desc))
+			} else {
+				b.WriteString(fmt.Sprintf("%d. %s\n", num, label))
+			}
+			display = append(display, it)
+			num++
+		}
+	}
+	return display
+}
+
 func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 	if len(p.Inventory) == 0 {
 		return false, "Inventaire vide."
 	}
 
-	var idx int
+	var display []Item
 	message := ""
 	linesPrinted := 0
 	for {
@@ -368,12 +405,9 @@ func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 
 		var b strings.Builder
 		b.WriteString("Inventaire :\n")
-		for i, item := range p.Inventory {
-			if desc := itemDescription(item); desc != "" {
-				b.WriteString(fmt.Sprintf("%d. %s — %s\n", i+1, item.Name, desc))
-			} else {
-				b.WriteString(fmt.Sprintf("%d. %s\n", i+1, item.Name))
-			}
+		display = combatInventoryDisplay(&b, p.Inventory)
+		if len(display) == 0 {
+			b.WriteString("Aucun objet utilisable en combat.\n")
 		}
 		b.WriteString("0. Retour\n")
 		if message != "" {
@@ -390,40 +424,38 @@ func combatInventoryMenu(p *Character, m *Monster) (bool, string) {
 			return false, ""
 		}
 		i, err := strconv.Atoi(choice)
-		if err != nil || i < 1 || i > len(p.Inventory) {
+		if err != nil || i < 1 || i > len(display) {
 			message = "Choix invalide."
 			continue
 		}
-		idx = i
-		break
-	}
+		idx := i
+		item := display[idx-1]
+		fmt.Println("Vous utilisez " + item.Name)
 
-	item := p.Inventory[idx-1]
-	fmt.Println("Vous utilisez " + item.Name)
-
-	switch {
-	case item.HealValue > 0:
-		p.CurrentHP += item.HealValue
-		if p.CurrentHP > p.MaxHP {
-			p.CurrentHP = p.MaxHP
+		switch {
+		case item.HealValue > 0:
+			p.CurrentHP += item.HealValue
+			if p.CurrentHP > p.MaxHP {
+				p.CurrentHP = p.MaxHP
+			}
+			fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
+		case item.ManaValue > 0:
+			p.CurrentMana += item.ManaValue
+			if p.CurrentMana > p.MaxMana {
+				p.CurrentMana = p.MaxMana
+			}
+			fmt.Printf("%s  Mana : %d/%d\n", p.Name, p.CurrentMana, p.MaxMana)
+		case item.PoisonDamage > 0:
+			m.Effects = applyEffect(m.Effects, StatusEffect{
+				Name: item.Name, TurnsLeft: item.PoisonTicks,
+				DamagePerTurn: item.PoisonDamage,
+			})
+			fmt.Println(item.Name + " est jetée sur " + m.Name + " !")
 		}
-		fmt.Printf("%s  PV : %d/%d\n", p.Name, p.CurrentHP, p.MaxHP)
-	case item.ManaValue > 0:
-		p.CurrentMana += item.ManaValue
-		if p.CurrentMana > p.MaxMana {
-			p.CurrentMana = p.MaxMana
-		}
-		fmt.Printf("%s  Mana : %d/%d\n", p.Name, p.CurrentMana, p.MaxMana)
-	case item.PoisonDamage > 0:
-		m.Effects = applyEffect(m.Effects, StatusEffect{
-			Name: item.Name, TurnsLeft: item.PoisonTicks,
-			DamagePerTurn: item.PoisonDamage,
-		})
-		fmt.Println(item.Name + " est jetée sur " + m.Name + " !")
-	}
 
-	removeInventory(p, item.Name)
-	return true, ""
+		removeInventory(p, item.Name)
+		return true, ""
+	}
 }
 
 func announcePhaseChange(m *Monster) {
