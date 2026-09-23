@@ -57,14 +57,34 @@ func padRight(s string, width int) string {
 }
 
 func truncateVisible(s string, maxWidth int) string {
-	runes := []rune(s)
-	if len(runes) <= maxWidth {
+	if visibleWidth(s) <= maxWidth {
 		return s
 	}
 	if maxWidth <= 1 {
 		return "…"
 	}
-	return string(runes[:maxWidth-1]) + "…"
+
+	var b strings.Builder
+	w := 0
+	i := 0
+	runes := []rune(s)
+	for i < len(runes) {
+		if loc := ansiEscape.FindStringIndex(string(runes[i:])); loc != nil && loc[0] == 0 {
+			match := ansiEscape.FindString(string(runes[i:]))
+			b.WriteString(match)
+			i += len([]rune(match))
+			continue
+		}
+		rw := runeWidth(runes[i])
+		if w+rw > maxWidth-1 {
+			break
+		}
+		b.WriteRune(runes[i])
+		w += rw
+		i++
+	}
+	b.WriteString("…")
+	return b.String()
 }
 
 func centerText(s string, width int) string {
