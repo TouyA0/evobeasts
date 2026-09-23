@@ -27,7 +27,7 @@ func clearScreen() {
 	cmd.Run()
 }
 
-var ansiEscape = regexp.MustCompile("\x1b\\[[0-9;]*m") // ignore les codes couleurs ANSI
+var ansiEscape = regexp.MustCompile("\x1b\\[[0-9;?]*[A-Za-z]")
 func runeWidth(r rune) int {
 	switch {
 	case r >= 0x1F300 && r <= 0x1FAFF: // émojis pictographiques (💥🌀💀👻🌫️🔥💚)
