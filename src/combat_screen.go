@@ -299,7 +299,7 @@ func predictMonsterSkillName(m *Monster, turn int) string {
 		return "Attaque"
 
 	case MonstreLoupGarou:
-		if !m.HowlUsed && turn == 3 {
+		if !m.HowlUsed && turn >= 3 {
 			return "Hurlement"
 		}
 		if turn%2 == 0 {

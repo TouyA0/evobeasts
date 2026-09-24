@@ -490,7 +490,7 @@ func sanglierPattern(p *Character, m *Monster, turn int) {
 }
 
 func loupGarouPattern(p *Character, m *Monster, turn int) {
-	if !m.HowlUsed && turn == 3 {
+	if !m.HowlUsed && turn >= 3 {
 		m.Attack += loupGarouHowlBonusAtk
 		m.HowlUsed = true
 		fmt.Println(m.Name + " hurle à la lune ! Son attaque augmente.")
