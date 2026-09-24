@@ -165,7 +165,7 @@ func checkPlayerDefeat(p *Character) bool {
 		return false
 	}
 
-	fmt.Println("\n" + p.Name + " est vaincu...")
+	fmt.Println()
 	isDead(p)
 	return true
 }
