@@ -688,43 +688,50 @@ func storyCredits(p *Character) {
 // ═══════════════════════════════════════════════════════════════════════
 
 func storyJournal() {
-	for {
+	banner, _ := renderImageString(bannerMemoires, bannerWidth)
+
+	if len(storyLog) == 0 {
 		clearScreen()
-		displayBanner(bannerMemoires)
+		fmt.Print(banner + "\n")
+		fmt.Print(boxify([]string{
+			"Mémoires de la vallée",
+			"",
+			"Vous n'avez encore rien vécu qui mérite d'être raconté.",
+		}))
+		pauseForInput()
+		return
+	}
 
-		if len(storyLog) == 0 {
-			fmt.Print(boxify([]string{
-				"Mémoires de la vallée",
-				"",
-				"Vous n'avez encore rien vécu qui mérite d'être raconté.",
-			}))
-			return
-		}
-
-		lines := []string{"Mémoires de la vallée", ""}
-		for i, b := range storyLog {
-			title := b.Title
-			if title == "" {
-				title = "Fragment"
+	selected := 0
+	for {
+		choice := selectMenuFrom(len(storyLog)+1, selected, func(sel int) string {
+			labels := make([]string, 0, len(storyLog)+1)
+			for _, b := range storyLog {
+				title := b.Title
+				if title == "" {
+					title = "Fragment"
+				}
+				labels = append(labels, title)
 			}
-			lines = append(lines, fmt.Sprintf("%d. %s", i+1, title))
-		}
-		lines = append(lines, "", "0. Retour")
+			labels = append(labels, "Retour")
+			width := maxWidth(labels...)
 
-		fmt.Print(boxify(lines))
-		fmt.Print("Votre choix : ")
+			lines := []string{"Mémoires de la vallée", ""}
+			for i, label := range labels {
+				theme := themeTurquoise
+				if i == len(storyLog) {
+					theme = themeGris
+				}
+				lines = append(lines, menuLine(label, width, i == sel, theme))
+			}
+			return banner + "\n" + strings.Join(lines, "\n")
+		})
 
-		choice := readInput()
-		if choice == "0" {
+		if choice == len(storyLog) {
 			return
 		}
+		selected = choice
 
-		index := -1
-		fmt.Sscanf(choice, "%d", &index)
-		if index < 1 || index > len(storyLog) {
-			continue
-		}
-
-		replayBeat(storyLog[index-1])
+		replayBeat(storyLog[choice])
 	}
 }
