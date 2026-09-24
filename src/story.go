@@ -694,8 +694,6 @@ func storyJournal() {
 		clearScreen()
 		fmt.Print(banner + "\n")
 		fmt.Print(boxify([]string{
-			"Mémoires de la vallée",
-			"",
 			"Vous n'avez encore rien vécu qui mérite d'être raconté.",
 		}))
 		pauseForInput()
@@ -716,7 +714,7 @@ func storyJournal() {
 			labels = append(labels, "Retour")
 			width := maxWidth(labels...)
 
-			lines := []string{"Mémoires de la vallée", ""}
+			lines := []string{}
 			for i, label := range labels {
 				theme := themeTurquoise
 				if i == len(storyLog) {
