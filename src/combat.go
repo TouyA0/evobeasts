@@ -450,17 +450,18 @@ func runMonsterTurn(p *Character, m *Monster, turn int) {
 	}
 }
 
-func monsterBasicAttack(p *Character, m *Monster, percent int) {
+func monsterBasicAttack(p *Character, m *Monster, percent int) bool {
 	base := monsterDamage(m, percent)
 	dmg, dodged := dealDamageToPlayer(base, m.Element, p)
 	if dodged {
 		fmt.Printf("%s attaque, %s esquive !\n", m.Name, p.Name)
-		return
+		return false
 	}
 	printSequential(
 		fmt.Sprintf("%s inflige %d dégâts à %s", m.Name, dmg, p.Name),
 		fmt.Sprintf("%s  PV : %d/%d", p.Name, p.CurrentHP, p.MaxHP),
 	)
+	return true
 }
 
 func verPattern(p *Character, m *Monster) {
@@ -469,13 +470,10 @@ func verPattern(p *Character, m *Monster) {
 
 func sanglierPattern(p *Character, m *Monster, turn int) {
 	percent := 100
-	if turn%3 == 0 {
+	charge := turn%3 == 0
+	if charge {
 		percent = sanglierChargePct
 		fmt.Println(m.Name + " charge !")
-		if rand.Intn(100) < sanglierStunChance {
-			p.SkipNextTurn = true
-			fmt.Println(p.Name + " est étourdi pour le prochain tour !")
-		}
 	}
 
 	fraction := float64(m.CurrentHP) / float64(m.MaxHP)
@@ -485,7 +483,10 @@ func sanglierPattern(p *Character, m *Monster, turn int) {
 		percent = percent * sanglierEnrage50Pct / 100
 	}
 
-	monsterBasicAttack(p, m, percent)
+	if monsterBasicAttack(p, m, percent) && charge && rand.Intn(100) < sanglierStunChance {
+		p.SkipNextTurn = true
+		fmt.Println(p.Name + " est étourdi pour le prochain tour !")
+	}
 }
 
 func loupGarouPattern(p *Character, m *Monster, turn int) {
@@ -525,10 +526,11 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 	case 0: // Éveil Igné
 		if turn%2 == 0 {
 			fmt.Println(m.Name + " crache un souffle ardent !")
-			monsterBasicAttack(p, m, dragonSouffleArdentPct)
-			p.Effects = applyEffect(p.Effects, StatusEffect{
-				Name: "Brûlure du Dragon", TurnsLeft: dragonBrulureDuree, DamagePerTurn: dragonBrulureDmg,
-			})
+			if monsterBasicAttack(p, m, dragonSouffleArdentPct) {
+				p.Effects = applyEffect(p.Effects, StatusEffect{
+					Name: "Brûlure du Dragon", TurnsLeft: dragonBrulureDuree, DamagePerTurn: dragonBrulureDmg,
+				})
+			}
 		} else {
 			monsterBasicAttack(p, m, dragonGriffePct)
 		}
@@ -547,8 +549,9 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		}
 		if turn%3 == 0 {
 			fmt.Println(m.Name + " vous enveloppe d'une étreinte liquide !")
-			monsterBasicAttack(p, m, dragonEtreinteLiquidePct)
-			p.SkipNextTurn = true
+			if monsterBasicAttack(p, m, dragonEtreinteLiquidePct) {
+				p.SkipNextTurn = true
+			}
 		} else {
 			fmt.Println(m.Name + " déchaîne un raz-de-marée !")
 			monsterBasicAttack(p, m, dragonRazDeMareePct)
@@ -561,9 +564,11 @@ func dragonPattern(p *Character, m *Monster, turn int) {
 		} else {
 			fmt.Println(m.Name + " frappe hors du plan, ignorant tout bouclier !")
 			base := monsterDamage(m, dragonFrappeHorsPlanPct)
+			shield := p.Shield
 			p.Shield = 0 // la frappe ignore le bouclier
 			dmg, dodged := dealDamageToPlayer(base, m.Element, p)
 			if dodged {
+				p.Shield = shield // esquivé : le bouclier est intact
 				fmt.Println(p.Name + " esquive !")
 			} else {
 				printSequential(
