@@ -32,20 +32,10 @@ dans la tanière du Dragon… et décidez de son sort.
 (Windows Terminal, le terminal de VS Code). Au premier build, il faut
 Internet pour télécharger les dépendances.
 
-**Windows**
 ```bash
 cd src
 go run .
 ```
-Vous pouvez aussi double-cliquer sur `evobeasts.exe` dans le dossier `src`.
-
-**Linux / macOS**
-```bash
-cd src
-go build -o evobeasts
-./evobeasts
-```
-
 > ⚠️ L'exécutable doit être lancé **depuis le dossier `src/`**. Les images et
 > les musiques sont chargées depuis `src/assets/`. Depuis un autre dossier, le
 > jeu fonctionne, mais sans images ni son.
