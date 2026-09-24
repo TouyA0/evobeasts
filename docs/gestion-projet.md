@@ -33,8 +33,7 @@ Combat au tour par tour, en 1 contre 1, dans le terminal.
 
 ```bash
 cd src
-go build -o evobeasts.exe
-ouvrir evobeasts.exe
+go run .
 ```
 
 Il faut aussi un terminal qui gère la couleur 24 bits (Windows Terminal,

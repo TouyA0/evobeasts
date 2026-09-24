@@ -35,8 +35,7 @@ Internet pour télécharger les dépendances.
 **Windows**
 ```bash
 cd src
-go build -o evobeasts.exe
-./evobeasts.exe
+go run .
 ```
 Vous pouvez aussi double-cliquer sur `evobeasts.exe` dans le dossier `src`.
 
