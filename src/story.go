@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	imgTaniere		 = "assets/story/taniere.png"
+	imgTaniere       = "assets/story/taniere.png"
 	imgValleeBrumes  = "assets/story/vallee_brumes.png"
 	imgVallee        = "assets/story/vallee_ruines.png"
 	imgTroisOeufs    = "assets/story/trois_oeufs.png"
@@ -41,13 +41,15 @@ type storyBeat struct {
 }
 
 func storyPrint(lines ...string) {
-	for _, line := range lines {
-		for _, r := range line {
-			fmt.Print(string(r))
-			time.Sleep(storyCharDelay)
+	for _, raw := range lines {
+		for _, line := range wrapLine(raw, storyPageWidth) {
+			for _, r := range line {
+				fmt.Print(string(r))
+				time.Sleep(storyCharDelay)
+			}
+			fmt.Println()
+			time.Sleep(storyLineDelay)
 		}
-		fmt.Println()
-		time.Sleep(storyLineDelay)
 	}
 }
 
@@ -65,6 +67,27 @@ func storyOnce(key string) bool {
 	}
 	storySeen[key] = true
 	return true
+}
+
+func wrapLine(line string, width int) []string {
+	if visibleWidth(line) <= width {
+		return []string{line}
+	}
+	trimmed := strings.TrimLeft(line, " ")
+	indent := line[:len(line)-len(trimmed)]
+	words := strings.Fields(trimmed)
+
+	var out []string
+	cur := indent + words[0]
+	for _, w := range words[1:] {
+		if visibleWidth(cur)+1+visibleWidth(w) > width {
+			out = append(out, cur)
+			cur = indent + w
+		} else {
+			cur += " " + w
+		}
+	}
+	return append(out, cur)
 }
 
 func bySpecies(p *Character, phenix, kraken, spectre string) string {
@@ -113,8 +136,10 @@ func replayBeat(b storyBeat) {
 			displayImage(b.Image, storyArtWidth)
 			fmt.Println()
 		}
-		for _, line := range page {
-			fmt.Println(line)
+		for _, raw := range page {
+			for _, line := range wrapLine(raw, storyPageWidth) {
+				fmt.Println(line)
+			}
 		}
 		if i < len(b.Pages)-1 {
 			pauseForInput()
@@ -134,28 +159,18 @@ func storyPrologue() {
 		Image: imgValleeBrumes,
 		Pages: [][]string{
 			{
-				"À l'écart du monde, il existe une vallée qu'aucune carte n'a jamais",
-				"nommée.",
-				"Ceux qui y vivaient l'appelaient la Vallée des Brumes.",
-			},
-			{
-				"Trois familles y régnaient en maîtres.",
+				"À l'écart du monde, il existe une vallée qu'aucune carte n'a jamais nommée. Ceux qui y vivaient l'appelaient la Vallée des Brumes.",
 				"",
+				"Trois familles y régnaient en maîtres.",
 				"  Les Phénix, qui ne connaissaient pas la mort.",
 				"  Les Krakens, qui gouvernaient les profondeurs.",
 				"  Les Caméléons Spectraux, que personne ne voyait jamais venir.",
 			},
 			{
-				"La brume, c'était eux.",
-				"",
-				"Le souffle des Phénix sur les eaux des Krakens, et le voile des",
-				"Caméléons pour cacher la vallée au reste du monde.",
+				"La brume, c'était eux : le souffle des Phénix sur les eaux des Krakens, et le voile des Caméléons pour cacher la vallée au reste du monde.",
 			},
 			{
-				"Sous la montagne dormait une créature plus vieille que la vallée :",
-				"le Dragon Ancien.",
-				"",
-				"Il n'avait aucun élément à lui. Il volait celui des autres.",
+				"Sous la montagne dormait une créature plus vieille que la vallée : le Dragon Ancien. Il n'avait aucun élément à lui. Il volait celui des autres.",
 				"",
 				"Une nuit, il se réveilla.",
 			},
@@ -166,23 +181,13 @@ func storyPrologue() {
 		Key:   "prologue-dragon",
 		Title: "LA NUIT DU DRAGON",
 		Image: imgVallee,
-		Pages: [][]string{
-			{
-				"Il ravagea la vallée.",
-				"",
-				"Il arracha aux trois familles ce qui les faisait vivre : leur feu,",
-				"leur eau, leur voile.",
-				"",
-				"Puis il redescendit sous la montagne, et les trois gardiens",
-				"disparurent avec lui.",
-				"Personne ne sait ce qu'il en a fait.",
-			},
-			{
-				"Sans ceux qui la faisaient naître, la brume changea.",
-				"Elle devint grise, épaisse, et rendit malade tout ce qui la",
-				"respirait.",
-			},
-		},
+		Pages: [][]string{{
+			"Il ravagea la vallée. Il arracha aux trois familles ce qui les faisait vivre : leur feu, leur eau, leur voile.",
+			"",
+			"Puis il redescendit sous la montagne, et les trois gardiens disparurent avec lui. Personne ne sait ce qu'il en a fait.",
+			"",
+			"Sans ceux qui la faisaient naître, la brume changea. Elle devint grise, épaisse, et rendit malade tout ce qui la respirait.",
+		}},
 	})
 
 	playBeat(storyBeat{
@@ -437,16 +442,10 @@ func storyPostFight(p *Character, tier int) {
 			Pages: [][]string{
 				{
 					"Il ne cherche plus à se relever.",
-				},
-				{
+					"",
 					"« Je te reconnais. Tu as l'odeur de ta famille.",
-					"",
-					"  J'étais là, la nuit où il est remonté. Il n'a pas tué les",
-					"  gardiens : il leur a arraché leur élément, et ils se sont",
-					"  changés en pierre.",
-					"",
-					"  Il les a traînés sous la montagne, dans sa tanière.",
-					"  Ils respirent encore.",
+					"  J'étais là, la nuit où il est remonté. Il n'a pas tué les gardiens : il leur a arraché leur élément, et ils se sont changés en pierre.",
+					"  Il les a traînés sous la montagne, dans sa tanière. Ils respirent encore.",
 					"",
 					"  Tant qu'il vit, ce qu'il leur a pris existe encore. »",
 				},
@@ -582,8 +581,7 @@ func storyChoiceScreen() string {
 	choice := selectMenuHint(2, 0, menuHintSide, func(sel int) string {
 		left := strings.Join(append([]string{"  " + header("ÉPARGNER", sel == 0, themeVert)}, leftBody...), "\n")
 		right := strings.Join(append([]string{header("ACHEVER", sel == 1, themeRouge)}, rightBody...), "\n")
-				return "\n" + centerText("\x1b[1mQUE FAITES-VOUS ?\x1b[0m", totalWidth) + "\n\n" +
-			dividedColumns(left, right, storyColWidth)
+		return "\n" + centerText("\x1b[1mQUE FAITES-VOUS ?\x1b[0m", totalWidth) + "\n\n" + dividedColumns(left, right, storyColWidth)
 	})
 
 	if choice == 0 {
