@@ -12,5 +12,6 @@ var procFlushConsoleInputBuffer = syscall.NewLazyDLL("kernel32.dll").NewProc("Fl
 // flushInput jette les touches tapées pendant les animations,
 // pour qu'un Entrée en trop ne valide pas le menu suivant tout seul.
 func flushInput() {
+	pendingKeys = nil
 	procFlushConsoleInputBuffer.Call(os.Stdin.Fd())
 }

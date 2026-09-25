@@ -46,26 +46,43 @@ func elementTheme(e Element) menuTheme {
 	return themeVert
 }
 
+var pendingKeys []byte
+
+var arrowKeys = []struct{ seq, key string }{
+	{"\x1b[A", "prev"}, {"\x1bOA", "prev"}, {"\x1b[D", "prev"}, {"\x1bOD", "prev"},
+	{"\x1b[B", "next"}, {"\x1bOB", "next"}, {"\x1b[C", "next"}, {"\x1bOC", "next"},
+}
+
 func readKey() string {
-	buf := make([]byte, 8)
-	n, err := os.Stdin.Read(buf)
-	if err != nil {
-		return "enter"
+	if len(pendingKeys) == 0 {
+		buf := make([]byte, 64)
+		n, err := os.Stdin.Read(buf)
+		if err != nil {
+			return "enter"
+		}
+		pendingKeys = buf[:n]
 	}
-	switch key := string(buf[:n]); key {
-	case "\x1b[A", "\x1bOA", "\x1b[D", "\x1bOD":
-		return "prev"
-	case "\x1b[B", "\x1bOB", "\x1b[C", "\x1bOC":
-		return "next"
-	case "\r", "\n":
+	k := pendingKeys
+	for _, a := range arrowKeys {
+		if strings.HasPrefix(string(k), a.seq) {
+			pendingKeys = k[len(a.seq):]
+			return a.key
+		}
+	}
+	if k[0] == 0x1b && len(k) > 1 && (k[1] == '[' || k[1] == 'O') {
+		pendingKeys = nil
+		return ""
+	}
+	pendingKeys = k[1:]
+	switch k[0] {
+	case '\r', '\n':
 		return "enter"
-	case "\x1b":
+	case 0x1b:
 		return "esc"
-	case "\x03":
+	case 0x03:
 		return "ctrlc"
-	default:
-		return key
 	}
+	return string(k[:1])
 }
 
 func isShortcut(key string, count int) bool {
@@ -89,7 +106,7 @@ func selectMenuFrom(count, start int, render func(selected int) string) int {
 func selectMenuHint(count, start int, hint string, render func(selected int) string) int {
 	draw := func(sel int) []string {
 		screen := strings.TrimRight(render(sel), "\n") + "\n\n" + hint
-		return strings.Split(screen, "\n")
+		return fitScreen(strings.Split(screen, "\n"))
 	}
 
 	selected := min(max(start, 0), count-1)
@@ -132,6 +149,9 @@ func selectMenuHint(count, start int, hint string, render func(selected int) str
 				fmt.Fprintf(&b, "\x1b[%d;1H%s\x1b[K", i+1, line)
 			}
 		}
+		if len(next) < len(prev) {
+			fmt.Fprintf(&b, "\x1b[%d;1H\x1b[J", len(next)+1)
+		}
 		os.Stdout.WriteString(b.String())
 		prev = next
 	}
@@ -144,7 +164,7 @@ func inlineSelect(count, start int, hint string, render func(selected int) strin
 		if height > 0 {
 			fmt.Fprintf(&b, "\r\x1b[%dA\x1b[J", height)
 		}
-		block := strings.TrimRight(render(sel), "\n") + "\n\n" + hint
+		block := strings.Join(fitWidth(strings.Split(strings.TrimRight(render(sel), "\n")+"\n\n"+hint, "\n")), "\n")
 		b.WriteString(block)
 		height = strings.Count(block, "\n")
 		fmt.Print(b.String())
@@ -252,4 +272,36 @@ func button(label string, t menuTheme) {
 
 func backButton(t menuTheme) {
 	button("Retour", t)
+}
+
+func fitWidth(lines []string) []string {
+	cols, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		return lines
+	}
+	for i, l := range lines {
+		if visibleWidth(l) >= cols {
+			lines[i] = truncateVisible(l, cols-1) + "\x1b[0m"
+		}
+	}
+	return lines
+}
+
+func fitScreen(lines []string) []string {
+	lines = fitWidth(lines)
+	_, rows, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || len(lines) < rows {
+		return lines
+	}
+	body, hint := lines[:len(lines)-1], lines[len(lines)-1]
+	h := rows - 2
+	sel := 0
+	for i, l := range body {
+		if strings.Contains(l, " ▶ ") {
+			sel = i
+			break
+		}
+	}
+	top := min(max(sel-h/2, 0), len(body)-h)
+	return append(append([]string{}, body[top:top+h]...), hint)
 }
