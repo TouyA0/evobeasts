@@ -31,8 +31,9 @@ func mainMenu(p *Character) {
 
 	for {
 		choice := selectMenu(len(options), func(sel int) string {
+			t := elementTheme(p.Species.Element)
 			lines := []string{
-				"\x1b[38;2;100;220;120m" + p.Name + " (" + string(p.Species.Element) + ")\x1b[0m",
+				"\x1b[38;2;" + t.bg + "m" + fmt.Sprintf("%s — %s (%s)", p.Name, currentStageName(p), p.Species.Element) + "\x1b[0m",
 				fmt.Sprintf("Niveau %d   PV %s   Mana %s   Or %d",
 					p.Level,
 					healthBar(p.CurrentHP, p.MaxHP, 12, nil),
