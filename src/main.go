@@ -3,6 +3,7 @@ package main
 import "fmt"
 
 func main() {
+	clearScreen()
 	displayTitleScreen()
 	playMusic(musicAmbiance)
 	pauseForInput()
